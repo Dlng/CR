@@ -12,16 +12,15 @@ VALIDATE_PATH = "/Users/Weilong/Desktop/Webscope_R1/validate.lsvm"
 UPATH = "/Users/Weilong/Codes/cofirank/out_bak/U.lsvm"
 VPATH = "/Users/Weilong/Codes/cofirank/out_bak/M.lsvm"
 
-
 # remove users with no neg or pos rating, remove the matching cols in U,V too
-function preprocessing(X, U, Y, T)
+function preprocessing(X, U, Y, T, relThreshold)
     idxs = []
     for userId  in 1:size(X)[1]
         pos_counter = 0
         neg_counter = 0
         row = X[userId,:]
         for item in row
-            if split(item,":")[2] == "1"
+            if parse(Int,split(item,":")[2]) >= relThreshold
                 pos_counter += 1
             else
                 neg_counter += 1
@@ -41,17 +40,17 @@ end
 
 # @param infGamma is for inf push,
 # @param regval is the regularization coeff.
-function train(X, U, V, Y, T;  algo=3, p=2, infGamma=10  ,regval = 1, dimW = 10, learningRate =0.0001)
+function train(X, U, V, Y, T;  algo=3, p=2, infGamma=10  ,regval = 1, dimW = 10, learningRate =0.0001, relThreshold = 4)
     assert(isnull(U) == false)
     assert(isnull(V) == false)
-    X, U,Y,T= preprocessing(X, U, Y, T)
+    X, U,Y,T= preprocessing(X, U, Y, T,relThreshold)
     ###########TEST
     temp1 =  deepcopy(U)
     temp2 =  deepcopy(V)
-    U_opt, V_opt = p_norm_optimizer(X, U, V, Y, learningRate, p = p, regval=regval)
+    U_opt, V_opt = p_norm_optimizer(X, U, V, Y, learningRate, p = p, regval=regval, relThreshold= relThreshold)
     assert(temp1 != U_opt)
     assert(temp2 != V_opt)
-    # curval = evaluate(U, V, T)
+    # curval = evaluate(U, V, T, relThreshold=relThreshold)
     # println(curval)
     ##############END TEST
     # if algo == 1
@@ -62,9 +61,9 @@ function train(X, U, V, Y, T;  algo=3, p=2, infGamma=10  ,regval = 1, dimW = 10,
     #     U, V = p_norm_optimizer(X, U, V, Y, T, learningRate, p = p)
     # end
     # TEST
-    # evaluate(U, V, T)
-    # return U_opt, V_opt
-    return U, V
+    # evaluate(U, V, T, relThreshold=relThreshold)
+    return U_opt, V_opt
+    # return U, V
     #END TEST
 end
 
@@ -74,7 +73,7 @@ end
 
 # evaludate the predictions on target dataset @param Y
 # @param metric = 'ap' or 'ndcg'
-function evaluate(U, V, Y; metric="ap", k=5)
+function evaluate(U, V, Y; metric="ap", k=5, relThreshold =4)
     @assert (any(isnan,U) == false) "U contains NaN"
     @assert (any(isnan,V) == false) "V contains NaN"
     #TODO arr of NaN still gives a value ???
@@ -84,8 +83,11 @@ function evaluate(U, V, Y; metric="ap", k=5)
     for userId in 1:userNum
         testVec = Y[userId, :]
         ui = U[:, userId]
-        testVecIds = [parse(Int,split(item, ":")[1]) for item in testVec]
-        testVecScores = [parse(Int,split(item, ":")[2]) for item in testVec]
+        #TEST
+        # println(testVec)
+        #end
+        testVecIds = [parse(Int64,split(item, ":")[1]) for item in testVec  if item != ""]
+        testVecScores = [parse(Int64,split(item, ":")[2]) for item in testVec  if item != ""]
         #get predictions
         preds = [(ui' * V[:, id])[1] for id in testVecIds]
         predictions = [(val, id) for (id, val) in enumerate(preds)]
@@ -94,7 +96,7 @@ function evaluate(U, V, Y; metric="ap", k=5)
         y_predict = [testVecScores[id] for id in y_predict_idxs]
         # get metric value
         if metric == "ap"
-            res += avg_precision_k(y_predict,0, k)
+            res += avg_precision_k(y_predict,relThreshold, k)
         else
             y_true = sort(testVecScores, rev = true)
             res += ndcg_k(y_true, y_predict, k)

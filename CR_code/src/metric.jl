@@ -14,7 +14,7 @@ end
 function dcg_k( ranking, k, isLinear::Bool)
   sum = max(0,ranking[1])
   for idx in 2:k
-      sum += max(0,ranking[idx])/log2(idx)
+      sum += max(0,ranking[idx])/log(idx)
   end
   return sum
 end

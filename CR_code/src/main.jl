@@ -29,6 +29,7 @@ function main()
     infGamma=parse(Int,retrieve(conf, "cr-train", "infGamma"))
     regval=parse(Float64,retrieve(conf, "cr-train", "regval"))
     learningRate=parse(Float64,retrieve(conf, "cr-train", "learningRate"))
+    relThreshold=parse(Int,retrieve(conf, "cr-train", "relThreshold"))
     TRAIN_PATH = retrieve(conf, "cr-train", "TRAIN_PATH")
     VALIDATE_PATH = retrieve(conf, "cr-train", "VALIDATE_PATH")
     TEST_PATH = retrieve(conf, "cr-train", "TEST_PATH")
@@ -44,18 +45,13 @@ function main()
     else
         U = []
         V = []
-        open(U_PATH) do f
-            for line in eachline(f)
-                push!(U,split(strip(line),' '))
-            end
-        end
-        open(V_PATH) do f
-            for line in eachline(f)
-                push!(V,split(strip(line),' '))
-            end
-        end
-        @assert size(U) == (dimW,u) "Wrong dim in U_PATH"
-        @assert size(V) == (dimW,m) "Wrong dim in V_PATH"
+        U = readdlm(U_PATH)
+        V = readdlm(V_PATH)
+
+        U = U'
+        V = V'
+        @assert size(U) == (dimW,u) "Wrong dim in U_PATH $(size(U))"
+        @assert size(V) == (dimW,m) "Wrong dim in V_PATH $(size(V))"
     end
 
     #load data set
@@ -64,7 +60,7 @@ function main()
     T = readdlm(TEST_PATH)
 
     U, V = train(X ,U, V, Y, T, algo=algo, p=p, infGamma=infGamma  ,
-    regval = regval, dimW = dimW, learningRate =learningRate)
+    regval = regval, dimW = dimW, learningRate =learningRate, relThreshold = relThreshold)
 
     # write optimized U, V to file
     writedlm(U_OPT_PATH, U, ", ")

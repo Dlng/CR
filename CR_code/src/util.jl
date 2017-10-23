@@ -27,13 +27,13 @@ end
 # return the list of ids of users that rank cur item relevant
 # @param X: the raw input matrix
 # @param itemId: the col idx in V
-function get_pos_users(X, itemId)
+function get_pos_users(X, itemId, relThreshold)
     res = []
     for userId in  1:size(X)[1]
         row = X[userId,:]
         for item in row
             temp = split(item, ":")
-            if itemId == parse(Int,temp[1]) && temp[2] =="1"
+            if itemId == parse(Int,temp[1]) && parse(Int,temp[2]) >= relThreshold
                 push!(res,userId)
                 break
             end
@@ -47,13 +47,13 @@ end
 # return the list of ids of users that rank cur item irrelevant
 # @param X: the raw input matrix
 # @param itemId: the col idx in V
-function get_neg_users(X, itemId)
+function get_neg_users(X, itemId,  relThreshold)
     res = []
     for userId in  1:size(X)[1]
         row = X[userId,:]
         for item in row
             temp = split(item, ":")
-            if itemId == parse(Int,temp[1]) && temp[2] =="-1"
+            if itemId == parse(Int,temp[1]) && parse(Int,temp[2]) < relThreshold
                 push!(res,userId)
                 break
             end
@@ -65,10 +65,10 @@ end
 # get relevent items for user i
 # @param userVec: vector of strings in forms of "itemId:rating"
 
-function get_pos_items(userVec)
+function get_pos_items(userVec, relThreshold)
     res = []
     for item in userVec
-        if split(item,":")[2] == "1"
+        if parse(Int,split(item,":")[2]) >= relThreshold
             push!(res, item)
         end
     end
@@ -77,10 +77,10 @@ end
 
 
 # get non-relevent items for user i
-function get_neg_items(userVec)
+function get_neg_items(userVec, relThreshold)
     res = []
     for item in userVec
-        if split(item,":")[2] == "-1"
+        if parse(Int,split(item,":")[2]) < relThreshold
             push!(res, item)
         end
     end
@@ -96,22 +96,46 @@ function get_height(xj, ui, V, posItems)
         posItemIdx = parse(Int,split(posItem,":")[1])
         posItemVec = V[:, posItemIdx]
 
-        delta  = (ui' * (posItemVec - xj))[1] ## So the method cannot work with randomized U, V ???
-        ri = log(2, (1 + exp(-delta)))
+        # delta  = (ui' * (posItemVec - xj))[1] ## So the method cannot work with randomized U, V ???
+        delta = dot(ui, (posItemVec - xj))
+        ri = 0
+        # println("delta is $delta")
+        if delta > -100 # FIX
+        # if abs(delta) <= 100 # FIX
+        # if abs(delta) in (1:100) # origin bug that causes vh contains NaN
+        # if 1 <= abs(delta) && abs(delta) <= 100 # this causes U blowing up
+            ri = log(1 + exp(-delta))
+        # elseif isnan(delta) # temp PATCH, #TODO this causes ui contains NaN
+        #     ri = 1000
+        else
+            ri = -delta
+        end
+
         #TEST
-        if ri == Inf
+        if ri == Inf || isnan(ri) || isnan(curHeight)
             temp = posItemVec-xj
-            temp2 = ui' * temp
+            temp2 = ui' * temp # why this is NAN
+            println("in get height ")
+            println(ri)
             println(temp)
             println(temp2)
             println(delta)
-            println(log(2, (1 + exp(-delta))))
-            ri = 10000
+
+            println(size(ui) == size(temp))
+
+            println(ui)
+            println(posItemVec)
+            println(xj)
+            println(" ")
+            # println(log((1 + exp(-delta))))
         end
         #END TEST
         curHeight += ri
 
     end
+    @assert (curHeight != Inf) "curHeight is Inf"
+    @assert (isnan(curHeight) == false) "curHeight is NaN"
+    @assert (curHeight >= 0) "curHeight is $curHeight"
     return curHeight
 end
 
@@ -149,7 +173,7 @@ function get_reverse_heights(userVec, ui, V)
             negItemVec = V[:, negItemIdx]
 
             delta  = -ui' * (posItemVec - negItemVec)
-            curHeight += log(2, (1 + exp(delta)))
+            curHeight += log((1 + exp(delta)))
         end
         push!(res, curHeight)
     end
