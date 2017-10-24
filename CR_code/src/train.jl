@@ -71,6 +71,7 @@ end
 function select_params()
 end
 
+# NOTE should maximizing the evaluation score. 
 # evaludate the predictions on target dataset @param Y
 # @param metric = 'ap' or 'ndcg'
 function evaluate(U, V, Y; metric="ap", k=5, relThreshold =4)

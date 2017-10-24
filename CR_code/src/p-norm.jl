@@ -250,7 +250,7 @@ function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, threshold=0.0001,regv
             println("RI")
             continue
         else
-            diff = ( preVal-curVal)
+            diff = (curVal - preVal)
             println("Diff is $diff")
             if diff <= threshold
                 isConverge = true
