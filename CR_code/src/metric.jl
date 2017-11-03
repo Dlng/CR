@@ -24,6 +24,8 @@ end
 # @param y_true argsorts scores in descending order
 # @param y_predict the ranking of items from top to bottom
 function ndcg_k(y_true, y_predict, k)
+    @assert (any(isnan, y_predict) == false) "there NaN in ndcg_k"
+    @assert (any(isnan, y_true) == false) "there NaN in ndcg_k"
     return dcg_k(y_predict, k = k)/dcg_k(y_true, k=k)
 end
 
@@ -43,6 +45,7 @@ end
 # @ param relThreshold: binary thresholds
 # @ param k, rank thresholds
 function avg_precision_k(y_predict, relThreshold, k)
+  @assert (any(isnan, y_predict) == false) "there NaN in ap_k"
   relIdxs = []
   # find positions of rel items
   for r in 1:k
@@ -50,7 +53,7 @@ function avg_precision_k(y_predict, relThreshold, k)
       push!(relIdxs, r)
     end
   end
-  if size(relIdxs)[1] == 0
+  if length(relIdxs) == 0
     return 0
   end
   # get precision_k for each of them
@@ -58,7 +61,7 @@ function avg_precision_k(y_predict, relThreshold, k)
   for id in relIdxs
     sum += precision_k(y_predict, relThreshold, id)
   end
-  return sum/ size(relIdxs)[1]
+  return sum/ length(relIdxs)
 end
 
 

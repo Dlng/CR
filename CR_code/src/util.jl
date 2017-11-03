@@ -33,8 +33,10 @@ function get_pos_users(X, itemId, relThreshold)
         row = X[userId,:]
         for item in row
             temp = split(item, ":")
-            if itemId == parse(Int,temp[1]) && parse(Int,temp[2]) >= relThreshold
-                push!(res,userId)
+            if itemId == parse(Int,temp[1])
+                if parse(Int,temp[2]) >= relThreshold
+                    push!(res,userId)
+                end
                 break
             end
         end
@@ -53,8 +55,10 @@ function get_neg_users(X, itemId,  relThreshold)
         row = X[userId,:]
         for item in row
             temp = split(item, ":")
-            if itemId == parse(Int,temp[1]) && parse(Int,temp[2]) < relThreshold
-                push!(res,userId)
+            if itemId == parse(Int,temp[1])
+                if parse(Int,temp[2]) < relThreshold
+                    push!(res,userId)
+                end
                 break
             end
         end
@@ -89,24 +93,16 @@ end
 
 
 # @param following convention from paper, xj is V[:,j]
-# TODO test, why would it return a Inf
 function get_height(xj, ui, V, posItems)
     curHeight = 0
     for posItem in posItems
         posItemIdx = parse(Int,split(posItem,":")[1])
         posItemVec = V[:, posItemIdx]
-
-        # delta  = (ui' * (posItemVec - xj))[1] ## So the method cannot work with randomized U, V ???
         delta = dot(ui, (posItemVec - xj))
         ri = 0
         # println("delta is $delta")
         if delta > -100 # FIX
-        # if abs(delta) <= 100 # FIX
-        # if abs(delta) in (1:100) # origin bug that causes vh contains NaN
-        # if 1 <= abs(delta) && abs(delta) <= 100 # this causes U blowing up
             ri = log(1 + exp(-delta))
-        # elseif isnan(delta) # temp PATCH, #TODO this causes ui contains NaN
-        #     ri = 1000
         else
             ri = -delta
         end
@@ -157,28 +153,51 @@ function get_heights(userVec, ui, V)
     return res
 end
 
+
+function get_reverse_height(xk, ui, V, negItems)
+    curRHeight = 0
+    for negItem in negItems
+        negItemIdx = parse(Int,split(negItem,":")[1])
+        negItemVec = V[:, negItemIdx]
+        delta = dot(ui, (xk - negItemVec))
+        ri = 0
+        # println("delta is $delta")
+        if delta > -100 # FIX
+            ri = log(1 + exp(-delta))
+        else
+            ri = -delta
+        end
+        curRHeight += ri
+
+    end
+    @assert (curRHeight != Inf) "curRHeight is Inf"
+    @assert (isnan(curRHeight) == false) "curRHeight is NaN"
+    @assert (curRHeight >= 0) "curRHeight is $curRHeight"
+    return curRHeight
+end
+
 #
 #return the vector of reverse heights of relevent item for user i
-function get_reverse_heights(userVec, ui, V)
-    res = []
-    posItems = get_pos_items(userVec)
-    negItems = get_neg_items(userVec)
-
-    for posItem in posItems
-        posItemIdx = parse(Int,split(posItem, ":")[1])
-        posItemVec = V[: , posItemIdx]
-        curHeight = 0.0
-        for negItem in negItems
-            negItemIdx = parse(Int,split(negItem,":")[1])
-            negItemVec = V[:, negItemIdx]
-
-            delta  = -ui' * (posItemVec - negItemVec)
-            curHeight += log((1 + exp(delta)))
-        end
-        push!(res, curHeight)
-    end
-    return res
-end
+# function get_reverse_heights(userVec, ui, V)
+#     res = []
+#     posItems = get_pos_items(userVec)
+#     negItems = get_neg_items(userVec)
+#
+#     for posItem in posItems
+#         posItemIdx = parse(Int,split(posItem, ":")[1])
+#         posItemVec = V[: , posItemIdx]
+#         curHeight = 0.0
+#         for negItem in negItems
+#             negItemIdx = parse(Int,split(negItem,":")[1])
+#             negItemVec = V[:, negItemIdx]
+#
+#             delta  = -ui' * (posItemVec - negItemVec)
+#             curHeight += log((1 + exp(delta)))
+#         end
+#         push!(res, curHeight)
+#     end
+#     return res
+# end
 
 
 

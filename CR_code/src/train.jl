@@ -40,16 +40,12 @@ end
 
 # @param infGamma is for inf push,
 # @param regval is the regularization coeff.
-function train(X, U, V, Y, T;  algo=3, p=2, infGamma=10  ,regval = 1, dimW = 10, learningRate =0.0001, relThreshold = 4)
+function train(X, U, V, Y, T;  algo=3, p=2, infGamma=10  ,regval = 1, dimW = 10, learningRate =0.0001, relThreshold = 4, iterNum=200)
     assert(isnull(U) == false)
     assert(isnull(V) == false)
     X, U,Y,T= preprocessing(X, U, Y, T,relThreshold)
-    ###########TEST
-    temp1 =  deepcopy(U)
-    temp2 =  deepcopy(V)
-    U_opt, V_opt = p_norm_optimizer(X, U, V, Y, learningRate, p = p, regval=regval, relThreshold= relThreshold)
-    assert(temp1 != U_opt)
-    assert(temp2 != V_opt)
+    ### TEST
+    U_opt, V_opt = p_norm_optimizer(X, U, V, Y, learningRate, p = p, regval=regval, relThreshold= relThreshold, iterNum=iterNum)
     # curval = evaluate(U, V, T, relThreshold=relThreshold)
     # println(curval)
     ##############END TEST
@@ -71,7 +67,7 @@ end
 function select_params()
 end
 
-# NOTE should maximizing the evaluation score. 
+# NOTE should maximizing the evaluation score.
 # evaludate the predictions on target dataset @param Y
 # @param metric = 'ap' or 'ndcg'
 function evaluate(U, V, Y; metric="ap", k=5, relThreshold =4)
@@ -79,7 +75,6 @@ function evaluate(U, V, Y; metric="ap", k=5, relThreshold =4)
     @assert (any(isnan,V) == false) "V contains NaN"
     #TODO arr of NaN still gives a value ???
     userNum = size(U)[2]
-    itemNum = size(V)[2]
     res = 0
     for userId in 1:userNum
         testVec = Y[userId, :]
@@ -90,7 +85,7 @@ function evaluate(U, V, Y; metric="ap", k=5, relThreshold =4)
         testVecIds = [parse(Int64,split(item, ":")[1]) for item in testVec  if item != ""]
         testVecScores = [parse(Int64,split(item, ":")[2]) for item in testVec  if item != ""]
         #get predictions
-        preds = [(ui' * V[:, id])[1] for id in testVecIds]
+        preds = [dot(ui, V[:, id]) for id in testVecIds]
         predictions = [(val, id) for (id, val) in enumerate(preds)]
         temp = sort(predictions,rev = true) # sort by first element
         y_predict_idxs = [ item[2] for item in temp]
@@ -98,14 +93,15 @@ function evaluate(U, V, Y; metric="ap", k=5, relThreshold =4)
         # get metric value
         if metric == "ap"
             res += avg_precision_k(y_predict,relThreshold, k)
-        else
-            y_true = sort(testVecScores, rev = true)
-            res += ndcg_k(y_true, y_predict, k)
+        # else
+        #     y_true = sort(testVecScores, rev = true)
+        #     res += ndcg_k(y_true, y_predict, k)
         end
     end
     # TODO seems the val is not properly caled
     return res / userNum
 end
+
 
 
 # evaludate the predictions on target dataset @param Y
