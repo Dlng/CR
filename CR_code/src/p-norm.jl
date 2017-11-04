@@ -2,6 +2,8 @@ include("util.jl")
 include("metric.jl")
 
 
+#TODO add another exp in gradient
+
 #TODO optimize
 function eval_obj(U, V, X, relThreshold, p)
     finalRes = 0

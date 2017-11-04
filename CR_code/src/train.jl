@@ -45,7 +45,8 @@ function train(X, U, V, Y, T;  algo=3, p=2, infGamma=10  ,regval = 1, dimW = 10,
     assert(isnull(V) == false)
     X, U,Y,T= preprocessing(X, U, Y, T,relThreshold)
     ### TEST
-    U_opt, V_opt = p_norm_optimizer(X, U, V, Y, learningRate, p = p, regval=regval, relThreshold= relThreshold, iterNum=iterNum)
+    U_opt, V_opt = r_norm_optimizer(X, U, V, Y, learningRate, regval=regval, relThreshold= relThreshold, iterNum=iterNum)
+    # U_opt, V_opt = p_norm_optimizer(X, U, V, Y, learningRate, p = p, regval=regval, relThreshold= relThreshold, iterNum=iterNum)
     # curval = evaluate(U, V, T, relThreshold=relThreshold)
     # println(curval)
     ##############END TEST
