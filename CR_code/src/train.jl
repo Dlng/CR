@@ -1,7 +1,7 @@
-include("./p-norm.jl")
-include("./i-norm.jl")
-include("./r-norm.jl")
-include("./metric.jl")
+include("p-norm.jl")
+include("i-norm.jl")
+include("r-norm.jl")
+include("metric.jl")
 # relevent thresholds
 ## >=4 : Movielens, Yahoo
 ## >=5: EachMovie

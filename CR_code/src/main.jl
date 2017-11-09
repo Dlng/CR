@@ -1,6 +1,6 @@
 # using Train
 
-include("./train.jl")
+include("train.jl")
 using ConfParser
 using PyPlot
 
