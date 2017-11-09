@@ -306,12 +306,15 @@ function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, threshold=0.0001,
 
     println("Pnorm: EXITED at iteration $count, convergence is :$isConverge")
     println("FINAL curVal_obj: $curVal_obj")
-
+    println("PARAMS")
+    println("learningRate: $learningRate, p:$p , threshold: $threshold,
+    regval:$regval, relThreshold:$relThreshold, iterNum:$iterNum, k:$k")
+    println("END PARAMS")
     # Plotting
     plotX = collect(1:length(plotY_obj))
     # title("minimizing loss")
     # ylabel("value of loss")
-    title("maximizing map@5")
+    title("PNORM maximizing map@5")
     ylabel("value of map@5")
     xlabel("iterations")
     # plot(plotX, plotY_obj, color="red", linewidth =2.0)

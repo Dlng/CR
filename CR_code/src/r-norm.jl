@@ -280,11 +280,16 @@ function r_norm_optimizer(X, U, V, Y, learningRate; threshold=0.0001,regval=regv
     println("RNORM: EXITED at iteration $count, convergence is :$isConverge")
     println("RNORM: FINAL curVal_obj: $curVal_obj")
 
+    println("PARAMS")
+    println("learningRate: $learningRate, threshold: $threshold,
+    regval:$regval, relThreshold:$relThreshold, iterNum:$iterNum, k:$k")
+    println("END PARAMS")
+
     # Plotting
     plotX = collect(1:length(plotY_obj))
     # title("minimizing loss")
     # ylabel("value of loss")
-    title("maximizing map@5")
+    title("RNORM maximizing map@5")
     ylabel("value of map@5")
     xlabel("iterations")
     # plot(plotX, plotY_obj, color="red", linewidth =2.0)
