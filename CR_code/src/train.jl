@@ -40,31 +40,21 @@ end
 
 # @param infGamma is for inf push,
 # @param regval is the regularization coeff.
-function train(X, U, V, Y, T;  algo=3, p=2, infGamma=10  ,regval = 1, dimW = 10,
+function train(X, U, V, Y, T;  algo=2, p=2, infGamma=10  ,regval = 1, dimW = 10,
      learningRate =0.0001, relThreshold = 4, iterNum=200, k = 5)
     assert(isnull(U) == false)
     assert(isnull(V) == false)
     X, U,Y,T= preprocessing(X, U, Y, T,relThreshold)
-    ### TEST
-    U_opt, V_opt = r_norm_optimizer(X, U, V, Y, learningRate, regval=regval,
-    relThreshold= relThreshold, iterNum=iterNum, k = k)
-    # U_opt, V_opt = p_norm_optimizer(X, U, V, Y, learningRate, p = p, regval=regval,
-    # relThreshold= relThreshold, iterNum=iterNum, k = k)
-    # curval = evaluate(U, V, T, relThreshold=relThreshold)
-    # println(curval)
-    ##############END TEST
-    # if algo == 1
-    #     U, V = inf_norm_optimizer(X, U, V, Y, T, infGamma = infGamma, regval = 1/lambda, learning_rate=learning_rate)
-    # elseif algo == 2
-    #     U, V = reverse_height_optimizer(X, U, V, Y, T)
-    # else
-    #     U, V = p_norm_optimizer(X, U, V, Y, T, learningRate, p = p)
-    # end
-    # TEST
-    # evaluate(U, V, T, relThreshold=relThreshold)
+    if algo == 1
+        U, V = inf_norm_optimizer(X, U, V, Y, T, infGamma = infGamma, regval = 1/lambda, learning_rate=learning_rate)
+    elseif algo == 2
+        U_opt, V_opt = p_norm_optimizer(X, U, V, Y, learningRate, p = p, regval=regval,
+        relThreshold= relThreshold, iterNum=iterNum, k = k)
+    else
+        U_opt, V_opt = r_norm_optimizer(X, U, V, Y, learningRate, regval=regval,
+        relThreshold= relThreshold, iterNum=iterNum, k = k)
+    end
     return U_opt, V_opt
-    # return U, V
-    #END TEST
 end
 
 #TODO use validatation set to select model params
@@ -102,6 +92,5 @@ function evaluate(U, V, Y; metric="ap", k=5, relThreshold =4)
             res += ndcg_k(y_true, y_predict, k)
         end
     end
-    # TODO seems the val is not properly caled
     return res / userNum
 end
