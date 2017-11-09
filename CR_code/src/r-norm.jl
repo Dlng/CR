@@ -280,6 +280,11 @@ function r_norm_optimizer(X, U, V, Y, learningRate; threshold=0.0001,regval=regv
     println("RNORM: EXITED at iteration $count, convergence is :$isConverge")
     println("RNORM: FINAL curVal_obj: $curVal_obj")
 
+    println("PARAMS")
+    println("learningRate: $learningRate, threshold: $threshold,
+    regval:$regval, relThreshold:$relThreshold, iterNum:$iterNum, k:$k")
+    println("END PARAMS")
+
 
     println("RNORN:final plotY_eval :$plotY_eval")
     println("RNORN:final plotY_obj :$plotY_obj")

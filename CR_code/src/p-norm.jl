@@ -310,5 +310,10 @@ function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, threshold=0.0001,
     println("PNORN:final plotY_eval :$plotY_eval")
     println("PNORN:final plotY_train :$plotY_train")
     println("PNORN:final plotY_obj :$plotY_obj")
+
+    println("PARAMS")
+    println("learningRate: $learningRate, p:$p , threshold: $threshold,
+    regval:$regval, relThreshold:$relThreshold, iterNum:$iterNum, k:$k")
+    println("END PARAMS")
     return U, V
 end
