@@ -42,6 +42,7 @@ function main()
     learningRate=parse(Float64,retrieve(conf, "cr-train", "learningRate"))
     relThreshold=parse(Int,retrieve(conf, "cr-train", "relThreshold"))
     iterNum=parse(Int,retrieve(conf, "cr-train", "iterNum"))
+    k=parse(Int,retrieve(conf, "cr-train", "k"))
     TRAIN_PATH = retrieve(conf, "cr-train", "TRAIN_PATH")
     VALIDATE_PATH = retrieve(conf, "cr-train", "VALIDATE_PATH")
     TEST_PATH = retrieve(conf, "cr-train", "TEST_PATH")
@@ -58,8 +59,8 @@ function main()
         U = []
         V = []
         #TODO temp patch: init empty rows in V with randn
-        U = readdlm(U_PATH)
-        V = readdlm(V_PATH)
+        U = read_numeric_matrix_from_file(U_PATH, dimW, m)
+        V = read_numeric_matrix_from_file(V_PATH, dimW, n)
 
         U = U'
         V = V'
@@ -76,7 +77,7 @@ function main()
 
     U, V = train(X ,U, V, Y, T, algo=algo, p=p, infGamma=infGamma  ,
     regval = regval, dimW = dimW, learningRate =learningRate, relThreshold = relThreshold,
-    iterNum = iterNum)
+    iterNum = iterNum, k = k)
 
     # write optimized U, V to file
     writedlm(U_OPT_PATH, U, ", ")

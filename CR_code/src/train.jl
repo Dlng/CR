@@ -40,13 +40,16 @@ end
 
 # @param infGamma is for inf push,
 # @param regval is the regularization coeff.
-function train(X, U, V, Y, T;  algo=3, p=2, infGamma=10  ,regval = 1, dimW = 10, learningRate =0.0001, relThreshold = 4, iterNum=200)
+function train(X, U, V, Y, T;  algo=3, p=2, infGamma=10  ,regval = 1, dimW = 10,
+     learningRate =0.0001, relThreshold = 4, iterNum=200, k = 5)
     assert(isnull(U) == false)
     assert(isnull(V) == false)
     X, U,Y,T= preprocessing(X, U, Y, T,relThreshold)
     ### TEST
-    U_opt, V_opt = r_norm_optimizer(X, U, V, Y, learningRate, regval=regval, relThreshold= relThreshold, iterNum=iterNum)
-    # U_opt, V_opt = p_norm_optimizer(X, U, V, Y, learningRate, p = p, regval=regval, relThreshold= relThreshold, iterNum=iterNum)
+    U_opt, V_opt = r_norm_optimizer(X, U, V, Y, learningRate, regval=regval,
+    relThreshold= relThreshold, iterNum=iterNum, k = k)
+    # U_opt, V_opt = p_norm_optimizer(X, U, V, Y, learningRate, p = p, regval=regval,
+    # relThreshold= relThreshold, iterNum=iterNum, k = k)
     # curval = evaluate(U, V, T, relThreshold=relThreshold)
     # println(curval)
     ##############END TEST
@@ -94,52 +97,11 @@ function evaluate(U, V, Y; metric="ap", k=5, relThreshold =4)
         # get metric value
         if metric == "ap"
             res += avg_precision_k(y_predict,relThreshold, k)
-        # else
-        #     y_true = sort(testVecScores, rev = true)
-        #     res += ndcg_k(y_true, y_predict, k)
+        else
+            y_true = sort(testVecScores, rev = true)
+            res += ndcg_k(y_true, y_predict, k)
         end
     end
     # TODO seems the val is not properly caled
     return res / userNum
 end
-
-
-
-# evaludate the predictions on target dataset @param Y
-# @param metric = 'ap' or 'ndcg'
-# function evaluate(X, U, V, Y; metric="ap", k=5)
-#     userNum = size(U)[2]
-#     itemNum = size(V)[2]
-#     res = 0
-#     for userId in 1:size(X)[1]
-#       userVec = X[userId, :]
-#       testUserVec = Y[userId, :]
-#       # get items in Y that appears in X
-#       #TODO why there are only 8 eles. in each vec
-#       userItemsIds = [split(item, ":")[1] for item in userVec]
-#       testUserItemsIds = [split(item, ":")[1] for item in testUserVec]
-#       commonIds = intersect(userItemsIds,testUserItemsIds)
-#       if size(commonIds,1) == 0
-#         continue
-#       end
-#       # get corresponding items from Y
-#       commonItems = [item for item in testUserVec if split(item,":")[1] in commonIds]
-#       commonItemsScores = [parse(Int,split(item, ":")[2]) for item in commonItems]
-#       # sort!(commonItems, It=Utils.compareItems)
-#
-#       # calculate metric score
-#       ui = U[:, userId]
-#       predictions = [ui' * V[:,id] for id in commonIds]
-#       preds = sort!([(predVal, id) for (id, predVal) in enumerate(predictions)])
-#       y_predict = [item[2] for item in preds]
-#       y_true = sort(commonItemsScores)
-#       if metric=="ap"
-#           ap = avg_precision_k(y_predict, commonItemsScores, 0, 5)
-#           res += ap
-#       else
-#         #   ndcg =
-#           res += ndcg_k(y_true, y_predict, commonItemsScores, k)
-#       end
-#     end
-#     return res/userNum
-# end

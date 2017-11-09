@@ -3,18 +3,31 @@
 """
 Util
 """
-function read_from_file(path)
-    res = []
-    open(path) do f
+function read_numeric_matrix_from_file(path, dimW, m)
+    res = zeros(m,dimW)
+    rowCnt = 1
+    open(path, "r") do f
         for line in eachline(f)
-            push!(res, split(strip(line),' '))
+            # println(typeof(line))
+            # println(line)
+            # println(isempty(line))
+            # println(length(line))
+            # if line == ""
+            if length(line) == 1
+                res[rowCnt, :] = randn(dimW)
+            else
+                tempLine = split(strip(line),' ')
+                tempLine2 = [parse(Float64, x) for x in tempLine]
+                res[rowCnt, :] = tempLine2
+            end
+            rowCnt += 1
         end
     end
     return res
 end
 
 function write_to_file(path, matrix)
-    open(path, 'w') do f
+    open(path, "w") do f
         for rowNum in 1:size(matrix)[1]
             row = matrix[rowNum, :]
             write(f, "$row \n")

@@ -189,7 +189,8 @@ end
 # ASSUME X is sparse
 # ASSUME U, V are non-sparse
 # @param Y is the validation set
-function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, threshold=0.0001,regval=regval, relThreshold = 4, iterNum=200)
+function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, threshold=0.0001,
+    regval=regval, relThreshold = 4, iterNum=200, k = 5)
     isConverge = false
     preVal_obj = 0
     curVal_obj = 0
@@ -252,7 +253,7 @@ function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, threshold=0.0001,regv
             # # println(vh./gradient)
             # # println(ragVal)
 
-            println(" ")
+            # println(" ")
             ########## CHECK Matrix op gives NaN
             # println(V[:,h])
             # println(gradient) ## gradient is NaN
@@ -269,8 +270,8 @@ function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, threshold=0.0001,regv
         # assert(U_temp != U)
         # assert(V_temp != V)
         # assert(Y_temp == Y)
-        curVal_eval = evaluate(U, V, Y, relThreshold = relThreshold)
-        curVal_train = evaluate(U, V, X, relThreshold = relThreshold)
+        curVal_eval = evaluate(U, V, Y, k = k, relThreshold = relThreshold)
+        curVal_train = evaluate(U, V, X, k = k, relThreshold = relThreshold)
         # Test evaluate the loss instead
         curVal_obj = eval_obj(U, V, X, relThreshold, p)
 
@@ -313,10 +314,12 @@ function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, threshold=0.0001,regv
     title("maximizing map@5")
     ylabel("value of map@5")
     xlabel("iterations")
-    plot(plotX, plotY_obj, color="red", linewidth =2.0)
+    # plot(plotX, plotY_obj, color="red", linewidth =2.0)
+    show()
+    # savefig("/Users/Weilong/Desktop/temp1.png")
     plot(plotX, plotY_eval, color="blue", linewidth =2.0)
     plot(plotX, plotY_train, color = "green", linewidth =2.0)
-
+    savefig("/Users/Weilong/Desktop/temp2.png")
     show()
     return U, V
 end

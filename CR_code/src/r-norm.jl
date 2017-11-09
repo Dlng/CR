@@ -243,8 +243,8 @@ function r_norm_optimizer(X, U, V, Y, learningRate; threshold=0.0001,regval=regv
         # assert(U_temp != U)
         # assert(V_temp != V)
         # assert(Y_temp == Y)
-        curVal_eval = evaluate(U, V, Y, relThreshold = relThreshold)
-        curVal_train = evaluate(U, V, X, relThreshold = relThreshold)
+        curVal_eval = evaluate(U, V, Y, k = k,relThreshold = relThreshold)
+        curVal_train = evaluate(U, V, X, k = k,relThreshold = relThreshold)
         # Test evaluate the loss instead
         curVal_obj = eval_obj(U, V, X, relThreshold)
 
@@ -287,7 +287,7 @@ function r_norm_optimizer(X, U, V, Y, learningRate; threshold=0.0001,regval=regv
     title("maximizing map@5")
     ylabel("value of map@5")
     xlabel("iterations")
-    plot(plotX, plotY_obj, color="red", linewidth =2.0)
+    # plot(plotX, plotY_obj, color="red", linewidth =2.0)
     plot(plotX, plotY_eval, color="blue", linewidth =2.0)
     plot(plotX, plotY_train, color = "green", linewidth =2.0)
 
