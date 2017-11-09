@@ -15,7 +15,7 @@ function main()
     println(111)
     # configPath = ARGS[1]
     # configPath = "config/default.ini"
-    configPath = "/Users/Weilong/Codes/CR/CR_code/config/default.ini"
+    configPath = "/homw/weilong/CR/CR_code/config/default.ini"
     conf = ConfParser.ConfParse(configPath)
     ConfParser.parse_conf!(conf)
 

@@ -1,5 +1,5 @@
-include("util.jl")
-include("metric.jl")
+include("/home/weilong/CR/CR_code/src/util.jl")
+include("/home/weilong/CR/CR_code/src/metric.jl")
 
 function eval_obj(U, V , X, relThreshold)
     finalRes = 0
@@ -280,17 +280,9 @@ function r_norm_optimizer(X, U, V, Y, learningRate; threshold=0.0001,regval=regv
     println("RNORM: EXITED at iteration $count, convergence is :$isConverge")
     println("RNORM: FINAL curVal_obj: $curVal_obj")
 
-    # Plotting
-    plotX = collect(1:length(plotY_obj))
-    # title("minimizing loss")
-    # ylabel("value of loss")
-    title("maximizing map@5")
-    ylabel("value of map@5")
-    xlabel("iterations")
-    # plot(plotX, plotY_obj, color="red", linewidth =2.0)
-    plot(plotX, plotY_eval, color="blue", linewidth =2.0)
-    plot(plotX, plotY_train, color = "green", linewidth =2.0)
 
-    show()
+    println("RNORN:final plotY_eval :$plotY_eval")
+    println("RNORN:final plotY_obj :$plotY_obj")
+    println("RNORN:final plotY_train :$plotY_train")
     return U, V
 end
