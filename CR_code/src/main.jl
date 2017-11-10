@@ -2,7 +2,6 @@
 
 include("train.jl")
 using ConfParser
-using PyPlot
 
 # 1. read in config
 # setup logger and trainer
@@ -15,7 +14,7 @@ function main()
     println(111)
     # configPath = ARGS[1]
     # configPath = "config/default.ini"
-    configPath = "/homw/weilong/CR/CR_code/config/default.ini"
+    configPath = "/home/weilong/CR/CR_code/config/default.ini"
     conf = ConfParser.ConfParse(configPath)
     ConfParser.parse_conf!(conf)
 
