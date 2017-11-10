@@ -173,7 +173,8 @@ end
 # ASSUME X is sparse
 # ASSUME U, V are non-sparse
 # @param Y is the validation set
-function r_norm_optimizer(X, U, V, Y, learningRate; threshold=0.0001,regval=regval, relThreshold = 4, iterNum=200)
+function r_norm_optimizer(X, U, V, Y, learningRate; threshold=0.0001,regval=regval,
+    relThreshold = 4, iterNum=200, k=5)
     isConverge = false
     preVal_obj = 0
     curVal_obj = 0
