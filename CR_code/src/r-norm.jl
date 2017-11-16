@@ -174,7 +174,7 @@ end
 # ASSUME U, V are non-sparse
 # @param Y is the validation set
 function r_norm_optimizer(X, U, V, Y, learningRate; threshold=0.0001,regval=regval,
-    relThreshold = 4, iterNum=200, k=5)
+    relThreshold = 4, iterNum=200, k=5, metric = 2)
     isConverge = false
     preVal_obj = 0
     curVal_obj = 0
@@ -244,8 +244,8 @@ function r_norm_optimizer(X, U, V, Y, learningRate; threshold=0.0001,regval=regv
         # assert(U_temp != U)
         # assert(V_temp != V)
         # assert(Y_temp == Y)
-        curVal_eval = evaluate(U, V, Y, k = k,relThreshold = relThreshold)
-        curVal_train = evaluate(U, V, X, k = k,relThreshold = relThreshold)
+        curVal_eval = evaluate(U, V, Y, k = k,relThreshold = relThreshold, metric=metric)
+        curVal_train = evaluate(U, V, X, k = k,relThreshold = relThreshold, metric=metric)
         # Test evaluate the loss instead
         curVal_obj = eval_obj(U, V, X, relThreshold)
 

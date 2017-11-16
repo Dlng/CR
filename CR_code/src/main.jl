@@ -33,7 +33,7 @@ function main()
     # n = 4552
     # n = 4552
     dimW = parse(Int,ConfParser.retrieve(conf, "cr-train", "dimW"))
-    #algo 1= inf push, 2 = revese height, 3 = p norm 4= new
+    #algo 1= inf push, 2 = p norm, 3 = r norm
     algo = parse(Int,ConfParser.retrieve(conf, "cr-train", "algo"))
     p = parse(Int,retrieve(conf, "cr-train", "p"))
     useCofi = parse(Bool,retrieve(conf, "cr-train", "useCofi"))
@@ -41,8 +41,10 @@ function main()
     regval=parse(Float64,retrieve(conf, "cr-train", "regval"))
     learningRate=parse(Float64,retrieve(conf, "cr-train", "learningRate"))
     relThreshold=parse(Int,retrieve(conf, "cr-train", "relThreshold"))
+    convThreshold=parse(Float64,retrieve(conf, "cr-train", "convThreshold"))
     iterNum=parse(Int,retrieve(conf, "cr-train", "iterNum"))
     k=parse(Int,retrieve(conf, "cr-train", "k"))
+    metric=parse(Int,retrieve(conf, "cr-train", "metric"))
     TRAIN_PATH = retrieve(conf, "cr-train", "TRAIN_PATH")
     VALIDATE_PATH = retrieve(conf, "cr-train", "VALIDATE_PATH")
     TEST_PATH = retrieve(conf, "cr-train", "TEST_PATH")
@@ -50,7 +52,6 @@ function main()
     V_PATH = retrieve(conf, "cr-train", "V_PATH")
     U_OPT_PATH = retrieve(conf, "cr-train", "U_OPT_PATH")
     V_OPT_PATH = retrieve(conf, "cr-train", "V_OPT_PATH")
-    # TODO work with randomly initialized U, V, later with those from cofirank
     if useCofi == false
         srand(1234) # testset seed
         U = randn((dimW, m))
@@ -74,10 +75,9 @@ function main()
     X = readdlm(TRAIN_PATH)
     Y = readdlm(VALIDATE_PATH)
     T = readdlm(TEST_PATH)
-
     U, V = train(X ,U, V, Y, T, algo=algo, p=p, infGamma=infGamma  ,
-    regval = regval, dimW = dimW, learningRate =learningRate, relThreshold = relThreshold,
-    iterNum = iterNum, k = k)
+    regval = regval, convThreshold=convThreshold, learningRate =learningRate, relThreshold = relThreshold,
+    iterNum = iterNum, k = k, metric=metric)
 
     # write optimized U, V to file
     writedlm(U_OPT_PATH, U, ", ")

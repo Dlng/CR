@@ -2,7 +2,6 @@ include("util.jl")
 include("metric.jl")
 
 
-#TODO add another exp in gradient
 
 #TODO optimize
 function eval_obj(U, V, X, relThreshold, p)
@@ -11,7 +10,7 @@ function eval_obj(U, V, X, relThreshold, p)
         userVec = X[id, :]
         ui = U[:, id]
         ni = length(userVec)
-        @assert (ni != 0) "PNORM:get_p_norm_gradient_by_user: ni is 0"
+        @assert (ni != 0) "PNORM:eval_obj: ni is 0"
         userRes = 0
         posItems = get_pos_items(userVec,relThreshold)
         negItems = get_neg_items(userVec, relThreshold)
@@ -189,8 +188,11 @@ end
 # ASSUME X is sparse
 # ASSUME U, V are non-sparse
 # @param Y is the validation set
-function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, threshold=0.0001,
-    regval=regval, relThreshold = 4, iterNum=200, k = 5)
+function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, convThreshold=0.0001,
+    regval=0.001, relThreshold = 4, iterNum=200, k = 5, metric=2)
+    # test
+    println("In PNORM")
+    # end
     isConverge = false
     preVal_obj = 0
     curVal_obj = 0
@@ -270,8 +272,8 @@ function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, threshold=0.0001,
         # assert(U_temp != U)
         # assert(V_temp != V)
         # assert(Y_temp == Y)
-        curVal_eval = evaluate(U, V, Y, k = k, relThreshold = relThreshold)
-        curVal_train = evaluate(U, V, X, k = k, relThreshold = relThreshold)
+        curVal_eval = evaluate(U, V, Y, k = k, relThreshold = relThreshold, metric=metric)
+        curVal_train = evaluate(U, V, X, k = k, relThreshold = relThreshold,metric=metric)
         # Test evaluate the loss instead
         curVal_obj = eval_obj(U, V, X, relThreshold, p)
 
@@ -289,17 +291,12 @@ function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, threshold=0.0001,
             # diff = (curVal - preVal) # maximizing the map_5
             diff = ( preVal_obj - curVal_obj) # minimizing the loss
             println("Diff is $diff")
-            if diff <= threshold
+            if diff <= convThreshold
                 isConverge = true
                 count = count+1
                 break
             end
         end
-        # # if Metric.is_converged(X, U, V, Y,threshold=0.0001)
-        # if is_converged(X, U, V, Y,threshold=0.0001)
-        #     isConverge = true
-        #     break
-        # end
         count = count+1
         println("Pnorm: FINISHED iteration $it, curVal_obj is : $curVal_obj")
     end
@@ -307,7 +304,7 @@ function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, threshold=0.0001,
     println("Pnorm: EXITED at iteration $count, convergence is :$isConverge")
     println("FINAL curVal_obj: $curVal_obj")
     println("PARAMS")
-    println("learningRate: $learningRate, p:$p , threshold: $threshold,
+    println("learningRate: $learningRate, p:$p , convThreshold: $convThreshold,
     regval:$regval, relThreshold:$relThreshold, iterNum:$iterNum, k:$k")
     println("END PARAMS")
     # Plotting
