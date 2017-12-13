@@ -13,14 +13,26 @@ using PyPlot
 #! dimW should be consistent with ~/Codes/cofirank/config/real.cfg:dimW
 function main()
     println(111)
-    configPath = ARGS[1]
-    # configPath = "/Users/Weilong/Codes/CR/CR_code/config/default.ini"
+    # configPath = ARGS[1]
+    configPath = "/Users/Weilong/Codes/CR/CR_code/config/default.ini"
     conf = ConfParser.ConfParse(configPath)
     ConfParser.parse_conf!(conf)
 
     # read config
-    m = parse(Int, ConfParser.retrieve(conf, "cr-train", "m"))
-    n = parse(Int,ConfParser.retrieve(conf, "cr-train", "n"))
+    dataset=parse(Int,retrieve(conf, "cr-train", "dataset"))
+
+    if dataset == 1
+        dataset = "yahoo"
+    elseif dataset == 2
+        dataset = "Movielens100k"
+    elseif dataset == 3
+        dataset = "Movielens1m"
+    else
+        dataset = "yahoo"
+    end
+
+    m = parse(Int, ConfParser.retrieve(conf, dataset, "m"))
+    n = parse(Int,ConfParser.retrieve(conf, dataset, "n"))
     # n = 6000
     # m=1000
     # n = 6000
@@ -31,26 +43,28 @@ function main()
     # n = 4552
     # n = 4552
     # n = 4552
-    dimW = parse(Int,ConfParser.retrieve(conf, "cr-train", "dimW"))
+    dimW = parse(Int,ConfParser.retrieve(conf, dataset, "dimW"))
     #algo 1= inf push, 2 = p norm, 3 = r norm
-    algo = parse(Int,ConfParser.retrieve(conf, "cr-train", "algo"))
-    p = parse(Int,retrieve(conf, "cr-train", "p"))
-    useCofi = parse(Bool,retrieve(conf, "cr-train", "useCofi"))
-    infGamma=parse(Int,retrieve(conf, "cr-train", "infGamma"))
-    regval=parse(Float64,retrieve(conf, "cr-train", "regval"))
-    learningRate=parse(Float64,retrieve(conf, "cr-train", "learningRate"))
-    relThreshold=parse(Int,retrieve(conf, "cr-train", "relThreshold"))
-    convThreshold=parse(Float64,retrieve(conf, "cr-train", "convThreshold"))
-    iterNum=parse(Int,retrieve(conf, "cr-train", "iterNum"))
-    k=parse(Int,retrieve(conf, "cr-train", "k"))
-    metric=parse(Int,retrieve(conf, "cr-train", "metric"))
-    TRAIN_PATH = retrieve(conf, "cr-train", "TRAIN_PATH")
-    VALIDATE_PATH = retrieve(conf, "cr-train", "VALIDATE_PATH")
-    TEST_PATH = retrieve(conf, "cr-train", "TEST_PATH")
-    U_PATH = retrieve(conf, "cr-train", "U_PATH")
-    V_PATH = retrieve(conf, "cr-train", "V_PATH")
-    U_OPT_PATH = retrieve(conf, "cr-train", "U_OPT_PATH")
-    V_OPT_PATH = retrieve(conf, "cr-train", "V_OPT_PATH")
+    algo = parse(Int,ConfParser.retrieve(conf, dataset, "algo"))
+    p = parse(Int,retrieve(conf, dataset, "p"))
+    useCofi = parse(Bool,retrieve(conf, dataset, "useCofi"))
+    infGamma=parse(Int,retrieve(conf, dataset, "infGamma"))
+    regval=parse(Float64,retrieve(conf, dataset, "regval"))
+    learningRate=parse(Float64,retrieve(conf, dataset, "learningRate"))
+    relThreshold=parse(Int,retrieve(conf, dataset, "relThreshold"))
+    convThreshold=parse(Float64,retrieve(conf, dataset, "convThreshold"))
+    iterNum=parse(Int,retrieve(conf, dataset, "iterNum"))
+    k=parse(Int,retrieve(conf, dataset, "k"))
+    metric=parse(Int,retrieve(conf, dataset, "metric"))
+
+    TRAIN_PATH = retrieve(conf, dataset, "TRAIN_PATH")
+    VALIDATE_PATH = retrieve(conf, dataset, "VALIDATE_PATH")
+    TEST_PATH = retrieve(conf, dataset, "TEST_PATH")
+    U_PATH = retrieve(conf, dataset, "U_PATH")
+    V_PATH = retrieve(conf, dataset, "V_PATH")
+    U_OPT_PATH = retrieve(conf, dataset, "U_OPT_PATH")
+    V_OPT_PATH = retrieve(conf, dataset, "V_OPT_PATH")
+
     if useCofi == false
         srand(1234) # testset seed
         U = randn((dimW, m))

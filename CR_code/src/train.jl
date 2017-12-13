@@ -76,9 +76,6 @@ function evaluate(U, V, Y; k=5, relThreshold =4, metric=1)
     for userId in 1:userNum
         testVec = Y[userId, :]
         ui = U[:, userId]
-        #TEST
-        # println(testVec)
-        #end
         testVecIds = [parse(Int64,split(item, ":")[1]) for item in testVec  if item != ""]
         testVecScores = [parse(Int64,split(item, ":")[2]) for item in testVec  if item != ""]
         #get predictions

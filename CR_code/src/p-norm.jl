@@ -168,8 +168,8 @@ function get_p_norm_gradient_by_item(X, U, V, itemId, p,relThreshold)
         if any(isnan(finalRes))
             temp = (p / ni) * res
             println(" RI : $temp")
-            println(old)
-            println(old - temp)
+            # println(old)
+            # println(old - temp)
             println("PosUsers: ui is : $ui")
             println("PosUsers: res is : $res")
             println("PosUsers: ni is : $ni")
@@ -187,7 +187,7 @@ end
 # return optimized U, V
 # ASSUME X is sparse
 # ASSUME U, V are non-sparse
-# @param Y is the validation set
+# @param Y is the test set
 function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, convThreshold=0.0001,
     regval=0.001, relThreshold = 4, iterNum=200, k = 5, metric=2)
     # test
@@ -205,11 +205,7 @@ function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, convThreshold=0.0001,
     plotY_obj = []
     plotY_train = []
     plotY_eval = []
-    # test
-    # U_temp = deepcopy(U)
-    # V_temp = deepcopy(V)
-    # Y_temp = deepcopy(Y)
-    # for it in 1:200
+
     for it in 1:iterNum
         println("Pnorm: On iteration $it")
         println("Start user phase")
