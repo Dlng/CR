@@ -40,19 +40,23 @@ end
 
 # @param infGamma is for inf push,
 # @param regval is the regularization coeff.
-function train(X, U, V, Y, T;  algo=2, p=2, infGamma=10  ,regval = 1, dimW = 10,
-     learningRate =0.0001, relThreshold = 4, iterNum=200, k = 5)
+function train(X, U, V, Y, T;  algo=2, p=2, infGamma=10  ,regval = 1,convThreshold=0.0001,
+     learningRate =0.0001, relThreshold = 4, iterNum=200, k = 5, metric=2)
     assert(isnull(U) == false)
     assert(isnull(V) == false)
     X, U,Y,T= preprocessing(X, U, Y, T,relThreshold)
+    println("TEST: $algo")
+    println("TEST: $typeof(algo)")
     if algo == 1
-        U, V = inf_norm_optimizer(X, U, V, Y, T, infGamma = infGamma, regval = 1/lambda, learning_rate=learning_rate)
+        regval = 1/infGamma
+        U, V = i_norm_optimizer(X, U, V, Y, learningRate=learningRate,regval=regval, infGamma=infGamma, relThreshold= relThreshold,
+        iterNum=iterNum, k = k, metric=metric)
     elseif algo == 2
-        U_opt, V_opt = p_norm_optimizer(X, U, V, Y, learningRate, p = p, regval=regval,
-        relThreshold= relThreshold, iterNum=iterNum, k = k)
+        U_opt, V_opt = p_norm_optimizer(X, U, V, Y, learningRate, p = p,convThreshold=convThreshold, regval=regval,
+        relThreshold= relThreshold, iterNum=iterNum, k = k, metric=metric)
     else
         U_opt, V_opt = r_norm_optimizer(X, U, V, Y, learningRate, regval=regval,
-        relThreshold= relThreshold, iterNum=iterNum, k = k)
+        relThreshold= relThreshold, iterNum=iterNum, k = k, metric=metric)
     end
     return U_opt, V_opt
 end
@@ -64,18 +68,14 @@ end
 # NOTE should maximizing the evaluation score.
 # evaludate the predictions on target dataset @param Y
 # @param metric = 'ap' or 'ndcg'
-function evaluate(U, V, Y; metric="ap", k=5, relThreshold =4)
+function evaluate(U, V, Y; k=5, relThreshold =4, metric=1)
     @assert (any(isnan,U) == false) "U contains NaN"
     @assert (any(isnan,V) == false) "V contains NaN"
-    #TODO arr of NaN still gives a value ???
     userNum = size(U)[2]
     res = 0
     for userId in 1:userNum
         testVec = Y[userId, :]
         ui = U[:, userId]
-        #TEST
-        # println(testVec)
-        #end
         testVecIds = [parse(Int64,split(item, ":")[1]) for item in testVec  if item != ""]
         testVecScores = [parse(Int64,split(item, ":")[2]) for item in testVec  if item != ""]
         #get predictions
@@ -85,7 +85,7 @@ function evaluate(U, V, Y; metric="ap", k=5, relThreshold =4)
         y_predict_idxs = [ item[2] for item in temp]
         y_predict = [testVecScores[id] for id in y_predict_idxs]
         # get metric value
-        if metric == "ap"
+        if metric == 1
             res += avg_precision_k(y_predict,relThreshold, k)
         else
             y_true = sort(testVecScores, rev = true)
