@@ -122,7 +122,7 @@ function get_p_norm_gradient_by_item(X, U, V, itemId, p,relThreshold)
         finalRes += (p / ni) * res
     end
 
-    println("PosUsers get gradient by item: midway gradient is : $finalRes")
+    # println("PosUsers get gradient by item: midway gradient is : $finalRes")
 
     for userId in posUsers
         ui = U[: , userId]
@@ -314,8 +314,8 @@ function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, convThreshold=0.0001,
     plotX = collect(1:length(plotY_obj))
     # title("minimizing loss")
     # ylabel("value of loss")
-    title("PNORM maximizing map@5")
-    ylabel("value of map@5")
+    title("PNORM maximizing map@$k")
+    ylabel("value of map@$k")
     xlabel("iterations")
     # plot(plotX, plotY_obj, color="red", linewidth =2.0)
     # show()
@@ -323,7 +323,7 @@ function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, convThreshold=0.0001,
     plot(plotX, plotY_eval, color="blue", linewidth =2.0)
     plot(plotX, plotY_train, color = "green", linewidth =2.0)
     curTime = Dates.value(now())
-    savefig("/Users/Weilong/Desktop/out_figure/pnorm_ml100k_given20_$curTime.png")
+    savefig("/Users/Weilong/Desktop/out_figure/pnorm_ml100k_given10_$curTime.png")
     # show()
     return U, V, curTime
 end

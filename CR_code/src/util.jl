@@ -13,11 +13,11 @@ function read_numeric_matrix_from_file(path, dimW, m)
             # println(isempty(line))
             # println(length(line))
             # if line == ""
-            if length(line) == 1
+            if length(line) == 1 || line == ""
                 res[rowCnt, :] = randn(dimW)
             else
                 tempLine = split(strip(line),' ')
-                tempLine2 = [parse(Float64, x) for x in tempLine]
+                tempLine2 = [parse(Float64, x) for x in tempLine] #TODO error parse("")
                 res[rowCnt, :] = tempLine2
             end
             rowCnt += 1

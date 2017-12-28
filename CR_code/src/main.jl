@@ -85,7 +85,6 @@ function main()
     else
         U = []
         V = [] # TODO optimize
-        #TODO temp patch: init empty rows in V with randn
         U = read_numeric_matrix_from_file(U_PATH, dimW, m)
         V = read_numeric_matrix_from_file(V_PATH, dimW, n)
 
