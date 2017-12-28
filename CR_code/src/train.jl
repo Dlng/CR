@@ -49,16 +49,16 @@ function train(X, U, V, Y, T;  algo=2, p=2, infGamma=10  ,regval = 1,convThresho
     println("TEST: $typeof(algo)")
     if algo == 1
         regval = 1/infGamma
-        U, V = i_norm_optimizer(X, U, V, Y, learningRate=learningRate,regval=regval, infGamma=infGamma, relThreshold= relThreshold,
+        U_opt, V_opt, curTime = i_norm_optimizer(X, U, V, Y, learningRate=learningRate,regval=regval, infGamma=infGamma, relThreshold= relThreshold,
         iterNum=iterNum, k = k, metric=metric)
     elseif algo == 2
-        U_opt, V_opt = p_norm_optimizer(X, U, V, Y, learningRate, p = p,convThreshold=convThreshold, regval=regval,
+        U_opt, V_opt , curTime= p_norm_optimizer(X, U, V, Y, learningRate, p = p,convThreshold=convThreshold, regval=regval,
         relThreshold= relThreshold, iterNum=iterNum, k = k, metric=metric)
     else
-        U_opt, V_opt = r_norm_optimizer(X, U, V, Y, learningRate, regval=regval,
+        U_opt, V_opt, curTime = r_norm_optimizer(X, U, V, Y, learningRate, regval=regval,
         relThreshold= relThreshold, iterNum=iterNum, k = k, metric=metric)
     end
-    return U_opt, V_opt
+    return U_opt, V_opt, curTime
 end
 
 #TODO use validatation set to select model params

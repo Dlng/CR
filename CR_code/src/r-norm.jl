@@ -1,5 +1,5 @@
-include("/home/weilong/CR/CR_code/src/util.jl")
-include("/home/weilong/CR/CR_code/src/metric.jl")
+include("util.jl")
+include("metric.jl")
 
 function eval_obj(U, V , X, relThreshold)
     finalRes = 0
@@ -153,12 +153,9 @@ function get_r_norm_gradient_by_item(X, U, V, itemId, relThreshold)
         if any(isnan(finalRes))
             temp = (p / ni) * res
             println(" RI : $temp")
-            println(old)
-            println(old - temp)
             println("PosUsers: ui is : $ui")
             println("PosUsers: res is : $res")
             println("PosUsers: ni is : $ni")
-            println("PosUsers: p is : $p")
             println("PosUsers: finalres is : $finalRes")
             println(" ")
         end

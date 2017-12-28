@@ -38,6 +38,10 @@ function get_p_norm_gradient_by_user(userVec,ui, V, p, relThreshold)
 
     for negItem in negItems
         negItemIdx = parse(Int,split(negItem,":")[1])
+        #TEST
+        # println("size of V: $(size(V))")
+        # println("negItemIdx : $negItemIdx")
+        #END
         negItemVec = V[:, negItemIdx]
         curHeight = get_height(negItemVec, ui, V, posItems)
         tempSum = 0
@@ -118,7 +122,7 @@ function get_p_norm_gradient_by_item(X, U, V, itemId, p,relThreshold)
         finalRes += (p / ni) * res
     end
 
-    # println("PosUsers: midway gradient is : $finalRes")
+    println("PosUsers get gradient by item: midway gradient is : $finalRes")
 
     for userId in posUsers
         ui = U[: , userId]
@@ -168,8 +172,6 @@ function get_p_norm_gradient_by_item(X, U, V, itemId, p,relThreshold)
         if any(isnan(finalRes))
             temp = (p / ni) * res
             println(" RI : $temp")
-            # println(old)
-            # println(old - temp)
             println("PosUsers: ui is : $ui")
             println("PosUsers: res is : $res")
             println("PosUsers: ni is : $ni")
@@ -198,13 +200,15 @@ function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, convThreshold=0.0001,
     curVal_obj = 0
     userNum = size(U)[2]
     itemNum = size(V)[2]
+    println("PNORM size of U $(size(U))")
+    println("PNORM size of V $(size(V))")
     count = 1
 
     # plotting
     plotX = []
-    plotY_obj = []
-    plotY_train = []
-    plotY_eval = []
+    plotY_obj = [] # eval obj on training set using updated U V
+    plotY_train = [] # eval metric on training set using updated U V
+    plotY_eval = [] # eval metric on testing set using updated U V
 
     for it in 1:iterNum
         println("Pnorm: On iteration $it")
@@ -276,37 +280,50 @@ function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, convThreshold=0.0001,
         push!(plotY_eval, curVal_eval)
         push!(plotY_train, curVal_train)
         push!(plotY_obj, curVal_obj)
-
+        println("curVal_eval is $curVal_eval")
+        println("curVal_train is $curVal_train")
+        println("curVal_obj is $curVal_obj")
         # println("curVal is : $curVal")
         # println("preVal is : $preVal")
         if it == 1
             println("RI")
             continue
         # TEST run full iteration
-        else
-            # diff = (curVal - preVal) # maximizing the map_5
-            diff = ( preVal_obj - curVal_obj) # minimizing the loss
-            println("Diff is $diff")
-            if diff <= convThreshold
-                isConverge = true
-                count = count+1
-                break
-            end
+        # else
+        #     # diff = (curVal - preVal) # maximizing the map_5
+        #     diff = ( preVal_obj - curVal_obj) # minimizing the loss
+        #     println("Diff is $diff")
+        #     if diff <= convThreshold
+        #         isConverge = true
+        #         count = count+1
+        #         break
+        #     end
         end
+        # END TEST
         count = count+1
         println("Pnorm: FINISHED iteration $it, curVal_obj is : $curVal_obj")
     end
 
     println("Pnorm: EXITED at iteration $count, convergence is :$isConverge")
     println("FINAL curVal_obj: $curVal_obj")
-
-    println("PNORN:final plotY_eval :$plotY_eval")
-    println("PNORN:final plotY_train :$plotY_train")
-    println("PNORN:final plotY_obj :$plotY_obj")
-
     println("PARAMS")
     println("learningRate: $learningRate, p:$p , convThreshold: $convThreshold,
     regval:$regval, relThreshold:$relThreshold, iterNum:$iterNum, k:$k")
     println("END PARAMS")
-    return U, V
+    # Plotting
+    plotX = collect(1:length(plotY_obj))
+    # title("minimizing loss")
+    # ylabel("value of loss")
+    title("PNORM maximizing map@5")
+    ylabel("value of map@5")
+    xlabel("iterations")
+    # plot(plotX, plotY_obj, color="red", linewidth =2.0)
+    # show()
+    # savefig("/Users/Weilong/Desktop/temp1.png")
+    plot(plotX, plotY_eval, color="blue", linewidth =2.0)
+    plot(plotX, plotY_train, color = "green", linewidth =2.0)
+    curTime = Dates.value(now())
+    savefig("/Users/Weilong/Desktop/out_figure/pnorm_ml100k_given20_$curTime.png")
+    # show()
+    return U, V, curTime
 end
