@@ -40,8 +40,8 @@ end
 
 # @param infGamma is for inf push,
 # @param regval is the regularization coeff.
-function train(X, U, V, Y, T;  algo=2, p=2, infGamma=10  ,regval = 1,convThreshold=0.0001,
-     learningRate =0.0001, relThreshold = 4, iterNum=200, k = 5, metric=2)
+function train(X, U, V, Y, T, plotDir, dataset,ni;  algo=2, p=2, infGamma=10  ,regval = 1,convThreshold=0.0001,
+     learningRate =0.0001, relThreshold = 4, iterNum=200, k = 5, metric=2, epochs=200, innerLngRate=0.01)
     assert(isnull(U) == false)
     assert(isnull(V) == false)
     X, U,Y,T= preprocessing(X, U, Y, T,relThreshold)
@@ -49,15 +49,17 @@ function train(X, U, V, Y, T;  algo=2, p=2, infGamma=10  ,regval = 1,convThresho
     println("TEST: $typeof(algo)")
     if algo == 1
         regval = 1/infGamma
-        U_opt, V_opt, curTime = i_norm_optimizer(X, U, V, Y, learningRate=learningRate,regval=regval, infGamma=infGamma, relThreshold= relThreshold,
+        U_opt, V_opt, curTime, plotY_eval, plotY_train,plotY_obj = r_norm_optimizer(X, U, V, Y, learningRate=learningRate,regval=regval, infGamma=infGamma, relThreshold= relThreshold,
         iterNum=iterNum, k = k, metric=metric)
     elseif algo == 2
-        U_opt, V_opt , curTime= p_norm_optimizer(X, U, V, Y, learningRate, p = p,convThreshold=convThreshold, regval=regval,
+        U_opt, V_opt , curTime, plotY_eval, plotY_train,plotY_obj= p_norm_optimizer(X, U, V, Y, learningRate, p = p,convThreshold=convThreshold, regval=regval,
         relThreshold= relThreshold, iterNum=iterNum, k = k, metric=metric)
     else
-        U_opt, V_opt, curTime = r_norm_optimizer(X, U, V, Y, learningRate, regval=regval,
-        relThreshold= relThreshold, iterNum=iterNum, k = k, metric=metric)
+        U_opt, V_opt, curTime,plotY_eval, plotY_train,plotY_obj = i_norm_optimizer(X, U, V, Y, learningRate=learningRate, regval=regval,
+        infGamma=infGamma,innerLngRate = innerLngRate,convThreshold=convThreshold, relThreshold= relThreshold, iterNum=iterNum,epochs = epochs, k = k, metric=metric)
     end
+    plotFigure(plotDir, curTime, dataset, algo, ni, k, plotY_eval, plotY_train, plotY_obj)
+
     return U_opt, V_opt, curTime
 end
 

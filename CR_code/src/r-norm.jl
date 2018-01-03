@@ -10,13 +10,12 @@ function eval_obj(U, V , X, relThreshold)
         ni = length(userVec)
         @assert (ni != 0) "RNORM:get_r_norm_gradient_by_user: ni is 0"
         userRes = 0
-        posItems = get_pos_items(userVec,relThreshold)
-        negItems = get_neg_items(userVec, relThreshold)
+        posItemIdxs = get_pos_items(userVec,relThreshold)
+        negItemIdxs = get_neg_items(userVec, relThreshold)
 
-        for posItem in posItems
-            posItemIdx = parse(Int,split(posItem,":")[1])
+        for posItemIdx in posItemIdxs
             vk = V[:, posItemIdx]
-            curRHeight = get_reverse_height(vk, ui, V, negItems)
+            curRHeight = get_reverse_height(vk, ui, V, negItemIdxs)
             userRes += log(1 + curRHeight)
         end
         finalRes += (1/ni) * userRes
@@ -29,18 +28,15 @@ end
 function get_r_norm_gradient_by_user(userVec,ui, V, relThreshold)
     ni = length(userVec)
     @assert (ni != 0) "RNORM:get_r_norm_gradient_by_user: ni is 0"
-    posItems = get_pos_items(userVec,relThreshold)
-    negItems = get_neg_items(userVec, relThreshold)
+    posItemIdxs = get_pos_items(userVec,relThreshold)
+    negItemIdxs = get_neg_items(userVec, relThreshold)
     # println("size of posItems $(length(posItems))")
     res = 0
-
-    for posItem in posItems
-        posItemIdx = parse(Int,split(posItem,":")[1])
+    for posItemIdx in posItemIdxs
         posItemVec = V[:, posItemIdx]
-        curRHeight = get_reverse_height(posItemVec, ui, V, negItems)
+        curRHeight = get_reverse_height(posItemVec, ui, V, negItemIdxs)
         tempSum = 0
-        for negItem in negItems
-            negItemIdx = parse(Int,split(negItem,":")[1])
+        for negItemIdx in negItemIdxs
             negItemVec = V[:, negItemIdx]
             t =  dot(ui, (posItemVec - negItemVec))
             tempSum += sigma(t) * (negItemVec - posItemVec)
@@ -49,8 +45,8 @@ function get_r_norm_gradient_by_user(userVec,ui, V, relThreshold)
         #TEST
         if all(res .== 0)
 
-            println(size(posItems))
-            println(size(negItems))
+            println(size(posItemIdxs))
+            println(size(negItemIdxs))
 
             println(curRHeight)
             println(tempSum)
@@ -73,17 +69,15 @@ function get_r_norm_gradient_by_item(X, U, V, itemId, relThreshold)
         userVec = X[userId, :]
         ni = size(userVec)[1]
         @assert (ni != 0) "RNORM:get_p_norm_gradient_by_item: ni is 0, $itemId, $userId"
-        posItems = get_pos_items(userVec,relThreshold)
-        negItems = get_neg_items(userVec, relThreshold)
+        posItemIdxs = get_pos_items(userVec,relThreshold)
+        negItemIdxs = get_neg_items(userVec, relThreshold)
         res = 0
-        for negItem in negItems
-            negItemIdx = parse(Int,split(negItem,":")[1])
+        for negItemIdx in negItemIdxs
             negItemVec = V[:, negItemIdx]
-            curRHeight = get_reverse_height(negItemVec, ui, V, posItems)
+            curRHeight = get_reverse_height(negItemVec, ui, V, posItemIdxs)
             @assert (curRHeight != Inf) "RNORM:get_r_norm_gradient_by_item:curRHeight is Inf"
             tempSum = 0
-            for posItem in posItems
-                posItemIdx = parse(Int,split(posItem,":")[1])
+            for posItemIdx in posItemIdxs
                 posItemVec = V[:, posItemIdx]
                 t =  dot(ui, ( posItemVec -negItemVec))
                 tempSum += sigma(t) * ui
@@ -111,17 +105,15 @@ function get_r_norm_gradient_by_item(X, U, V, itemId, relThreshold)
         userVec = X[userId, :]
         ni = size(userVec)[1]
         @assert (ni != 0) "PNORM:get_p_norm_gradient_by_item: ni is 0, $itemId, $userId"
-        posItems = get_pos_items(userVec,relThreshold)
-        negItems = get_neg_items(userVec,relThreshold)
+        posItemIdxs = get_pos_items(userVec,relThreshold)
+        negItemIdxs = get_neg_items(userVec,relThreshold)
         res = 0
-        for negItem in negItems
-            negItemIdx = parse(Int,split(negItem,":")[1])
+        for negItemIdx in negItemIdxs
             negItemVec = V[:, negItemIdx]
-            curRHeight = get_reverse_height(negItemVec, ui, V, posItems)
+            curRHeight = get_reverse_height(negItemVec, ui, V, posItemIdxs)
             @assert (curRHeight != Inf) "PNORM:get_p_norm_gradient_by_item:curRHeight is Inf"
             tempSum = 0
-            for posItem in posItems
-                posItemIdx = parse(Int,split(posItem,":")[1])
+            for posItemIdx in posItemIdxs
                 posItemVec = V[:, posItemIdx]
                 t =  dot(ui, ( posItemVec -negItemVec))
                 tempSum += sigma(t) * ui
@@ -151,8 +143,6 @@ function get_r_norm_gradient_by_item(X, U, V, itemId, relThreshold)
         finalRes -=  (1 / ni) * res
         # TEST
         if any(isnan(finalRes))
-            temp = (p / ni) * res
-            println(" RI : $temp")
             println("PosUsers: ui is : $ui")
             println("PosUsers: res is : $res")
             println("PosUsers: ni is : $ni")
@@ -287,5 +277,6 @@ function r_norm_optimizer(X, U, V, Y, learningRate; threshold=0.0001,regval=regv
     println("RNORN:final plotY_eval :$plotY_eval")
     println("RNORN:final plotY_obj :$plotY_obj")
     println("RNORN:final plotY_train :$plotY_train")
-    return U, V
+    curTime = Dates.value(now())
+    return U, V, curTime, plotY_eval, plotY_train, plotY_obj
 end

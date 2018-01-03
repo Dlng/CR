@@ -2,7 +2,6 @@ include("util.jl")
 include("metric.jl")
 
 
-
 #TODO optimize
 function eval_obj(U, V, X, relThreshold, p)
     finalRes = 0
@@ -12,13 +11,12 @@ function eval_obj(U, V, X, relThreshold, p)
         ni = length(userVec)
         @assert (ni != 0) "PNORM:eval_obj: ni is 0"
         userRes = 0
-        posItems = get_pos_items(userVec,relThreshold)
-        negItems = get_neg_items(userVec, relThreshold)
+        posItemIdxs = get_pos_items(userVec,relThreshold)
+        negItemIdxs = get_neg_items(userVec, relThreshold)
 
-        for negItem in negItems
-            negItemIdx = parse(Int,split(negItem,":")[1])
+        for negItemIdx in negItemIdxs
             vj = V[:, negItemIdx]
-            curHeight = get_height(vj, ui, V, posItems)
+            curHeight = get_height(vj, ui, V, posItemIdxs)
             userRes += curHeight^p
         end
         finalRes += (1/ni) * userRes
@@ -31,22 +29,16 @@ end
 function get_p_norm_gradient_by_user(userVec,ui, V, p, relThreshold)
     ni = length(userVec)
     @assert (ni != 0) "PNORM:get_p_norm_gradient_by_user: ni is 0"
-    posItems = get_pos_items(userVec,relThreshold)
-    negItems = get_neg_items(userVec, relThreshold)
+    posItemIdxs = get_pos_items(userVec,relThreshold)
+    negItemIdxs = get_neg_items(userVec, relThreshold)
     # println("size of posItems $(length(posItems))")
     res = 0
 
-    for negItem in negItems
-        negItemIdx = parse(Int,split(negItem,":")[1])
-        #TEST
-        # println("size of V: $(size(V))")
-        # println("negItemIdx : $negItemIdx")
-        #END
+    for negItemIdx in negItemIdxs
         negItemVec = V[:, negItemIdx]
-        curHeight = get_height(negItemVec, ui, V, posItems)
+        curHeight = get_height(negItemVec, ui, V, posItemIdxs)
         tempSum = 0
-        for posItem in posItems
-            posItemIdx = parse(Int,split(posItem,":")[1])
+        for posItemIdx in posItemIdxs
             posItemVec = V[:, posItemIdx]
             t =  dot(ui, (posItemVec - negItemVec))
             # tempSum += sigma((ui' * (negItemVec - posItemVec))[1]) * ui
@@ -65,12 +57,16 @@ function get_p_norm_gradient_by_user(userVec,ui, V, p, relThreshold)
         # println(" ")
         #TEST
         if all(res .== 0)
+            println("in get_p_norm_gradient_by_user")
 
-            println(size(posItems))
-            println(size(negItems))
+            println(size(posItemIdxs))
+            println(size(negItemIdxs))
 
             println(curHeight)
             println(tempSum)
+            println("negItemVec: $negItemVec")
+            println("posItemVec: $posItemVec")
+            println("ui: $ui")
             println(" ")
         end
         #END
@@ -78,7 +74,7 @@ function get_p_norm_gradient_by_user(userVec,ui, V, p, relThreshold)
     return (p / ni)  * res
 end
 
-
+#TODO this phase is SLOW; obs: remapping the item idx significant;y speeds up this
 function get_p_norm_gradient_by_item(X, U, V, itemId, p,relThreshold)
     posUsers = get_pos_users(X, itemId,relThreshold)
     negUsers = get_neg_users(X, itemId,relThreshold)
@@ -90,26 +86,24 @@ function get_p_norm_gradient_by_item(X, U, V, itemId, p,relThreshold)
         userVec = X[userId, :]
         ni = size(userVec)[1]
         @assert (ni != 0) "PNORM:get_p_norm_gradient_by_item: ni is 0, $itemId, $userId"
-        posItems = get_pos_items(userVec,relThreshold)
-        negItems = get_neg_items(userVec, relThreshold)
+        posItemIdxs = get_pos_items(userVec,relThreshold)
+        negItemIdxs = get_neg_items(userVec, relThreshold)
         res = 0
-        for negItem in negItems
-            negItemIdx = parse(Int,split(negItem,":")[1])
+        for negItemIdx in negItemIdxs
             negItemVec = V[:, negItemIdx]
-            curHeight = get_height(negItemVec, ui, V, posItems)
+            curHeight = get_height(negItemVec, ui, V, posItemIdxs)
             @assert (curHeight != Inf) "PNORM:get_p_norm_gradient_by_item:curHeight is Inf"
             tempSum = 0
-            for posItem in posItems
-                posItemIdx = parse(Int,split(posItem,":")[1])
+            for posItemIdx in posItemIdxs
                 posItemVec = V[:, posItemIdx]
                 t =  dot(ui, ( posItemVec -negItemVec))
-                # tempSum += sigma((ui' * (negItemVec - posItemVec))[1]) * ui
                 tempSum += sigma(t) * ui
                 # println("g-item: dot product is : $t")
                 # println("g-item: posItemVec is : $posItemVec")
             end
 
             res +=  curHeight ^ (p-1) * tempSum
+            #TEST
             # println(" ")
             # println("g-item: ui is : $ui")
             # println("g-item: negItemVec is : $negItemVec")
@@ -118,6 +112,7 @@ function get_p_norm_gradient_by_item(X, U, V, itemId, p,relThreshold)
             # println("g-item: res is : $res")
             # println(" ")
             # println(" ")
+            #END TEST
         end
         finalRes += (p / ni) * res
     end
@@ -129,23 +124,21 @@ function get_p_norm_gradient_by_item(X, U, V, itemId, p,relThreshold)
         userVec = X[userId, :]
         ni = size(userVec)[1]
         @assert (ni != 0) "PNORM:get_p_norm_gradient_by_item: ni is 0, $itemId, $userId"
-        posItems = get_pos_items(userVec,relThreshold)
-        negItems = get_neg_items(userVec,relThreshold)
+        posItemIdxs = get_pos_items(userVec,relThreshold)
+        negItemIdxs = get_neg_items(userVec,relThreshold)
         res = 0
-        for negItem in negItems
-            negItemIdx = parse(Int,split(negItem,":")[1])
+        for negItemIdx in negItemIdxs
             negItemVec = V[:, negItemIdx]
-            curHeight = get_height(negItemVec, ui, V, posItems)
+            curHeight = get_height(negItemVec, ui, V, posItemIdxs)
             @assert (curHeight != Inf) "PNORM:get_p_norm_gradient_by_item:curHeight is Inf"
             tempSum = 0
-            for posItem in posItems
-                posItemIdx = parse(Int,split(posItem,":")[1])
+            for posItemIdx in posItemIdxs
                 posItemVec = V[:, posItemIdx]
                 t =  dot(ui, ( posItemVec -negItemVec))
                 # tempSum += sigma((ui' * (negItemVec - posItemVec))[1]) * ui
                 tempSum += sigma(t) * ui
                 # TEST
-                if any(isnan(tempSum))
+                if any(isnan.(tempSum))
                     println("PosUsers: curHeight is : $curHeight")
                     println("PosUsers: ui is : $ui")
                     println("PosUsers: tempSum is : $tempSum")
@@ -157,7 +150,7 @@ function get_p_norm_gradient_by_item(X, U, V, itemId, p,relThreshold)
             end
             res +=  curHeight ^ (p-1) * tempSum
             # TEST
-            if any(isnan(res))
+            if any(isnan.(res))
                 println("RES is NAN")
                 println("PosUsers: curHeight is : $curHeight")
                 println("PosUsers: ui is : $ui")
@@ -169,7 +162,7 @@ function get_p_norm_gradient_by_item(X, U, V, itemId, p,relThreshold)
         end
         finalRes -=  (p / ni) * res
         # TEST
-        if any(isnan(finalRes))
+        if any(isnan.(finalRes))
             temp = (p / ni) * res
             println(" RI : $temp")
             println("PosUsers: ui is : $ui")
@@ -181,7 +174,7 @@ function get_p_norm_gradient_by_item(X, U, V, itemId, p,relThreshold)
         end
         # END
     end
-    # println("final gradient is $finalRes")
+    println("get_p_norm_gradient_by_item: final gradient is $finalRes")
     return finalRes
 end
 
@@ -310,20 +303,6 @@ function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, convThreshold=0.0001,
     println("learningRate: $learningRate, p:$p , convThreshold: $convThreshold,
     regval:$regval, relThreshold:$relThreshold, iterNum:$iterNum, k:$k")
     println("END PARAMS")
-    # Plotting
-    plotX = collect(1:length(plotY_obj))
-    # title("minimizing loss")
-    # ylabel("value of loss")
-    title("PNORM maximizing map@$k")
-    ylabel("value of map@$k")
-    xlabel("iterations")
-    # plot(plotX, plotY_obj, color="red", linewidth =2.0)
-    # show()
-    # savefig("/Users/Weilong/Desktop/temp1.png")
-    plot(plotX, plotY_eval, color="blue", linewidth =2.0)
-    plot(plotX, plotY_train, color = "green", linewidth =2.0)
     curTime = Dates.value(now())
-    savefig("/Users/Weilong/Desktop/out_figure/pnorm_ml100k_given10_$curTime.png")
-    # show()
-    return U, V, curTime
+    return U, V, curTime, plotY_eval, plotY_train, plotY_obj
 end

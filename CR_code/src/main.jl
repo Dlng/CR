@@ -29,21 +29,12 @@ function main()
     elseif dataset == 3
         dataset = "ml1m"
     else
-        dataset = "yahoo"
+        dataset = "temp"
     end
 
     m = parse(Int, ConfParser.retrieve(conf, dataset, "m"))
     n = parse(Int,ConfParser.retrieve(conf, dataset, "n"))
-    # n = 6000
-    # m=1000
-    # n = 6000
-    # m=100
-    # n = 500
-    # n = 423
-    # n = 4501
-    # n = 4552
-    # n = 4552
-    # n = 4552
+    ni = parse(Int,ConfParser.retrieve(conf, dataset, "ni"))
     dimW = parse(Int,ConfParser.retrieve(conf, dataset, "dimW"))
     #algo 1= inf push, 2 = p norm, 3 = r norm
     algo = parse(Int,ConfParser.retrieve(conf, dataset, "algo"))
@@ -58,6 +49,9 @@ function main()
     k=parse(Int,retrieve(conf, dataset, "k"))
     metric=parse(Int,retrieve(conf, dataset, "metric"))
 
+    epochs=parse(Int,retrieve(conf, dataset, "epochs"))
+    innerLngRate=parse(Float64,retrieve(conf, dataset, "innerLngRate"))
+    convThreshold=parse(Float64,retrieve(conf, dataset, "convThreshold"))
     TRAIN_PATH = retrieve(conf, dataset, "TRAIN_PATH")
     VALIDATE_PATH = retrieve(conf, dataset, "VALIDATE_PATH")
     TEST_PATH = retrieve(conf, dataset, "TEST_PATH")
@@ -65,6 +59,9 @@ function main()
     V_PATH = retrieve(conf, dataset, "V_PATH")
     U_OPT_PATH = retrieve(conf, dataset, "U_OPT_PATH")
     V_OPT_PATH = retrieve(conf, dataset, "V_OPT_PATH")
+    figure_Dir = retrieve(conf, dataset, "figure_Dir")
+
+
 
 
     #load data set
@@ -96,9 +93,39 @@ function main()
         # @assert size(V) == (dimW,n) "Wrong dim in V_PATH $(size(V))"
     end
 
-    U, V, curTime = train(X ,U, V, Y, T, algo=algo, p=p, infGamma=infGamma  ,
+
+    # print configs
+    println("START PRINTING CONFIGs")
+    println("dataset $dataset")
+    println("ni $ni")
+    println("dimW $dimW")
+    println("algo $algo")
+    println("p $p")
+    println("useCofi $useCofi")
+    println("infGamma $infGamma")
+    println("regval $regval")
+    println("learningRate $learningRate")
+    println("relThreshold $relThreshold")
+    println("convThreshold $convThreshold")
+    println("iterNum $iterNum")
+    println("k $k")
+    println("metric $metric")
+    println("epochs $epochs")
+    println("innerLngRate $innerLngRate")
+    println("convThreshold $convThreshold")
+    println("TRAIN_PATH $TRAIN_PATH")
+    println("VALIDATE_PATH $VALIDATE_PATH")
+    println("TEST_PATH $TEST_PATH")
+    println("U_PATH $U_PATH")
+    println("U_OPT_PATH $U_OPT_PATH")
+    println("V_OPT_PATH $V_OPT_PATH")
+    println("figure_Dir $figure_Dir")
+    println("END PRINTING CONFIGs")
+    U, V, curTime = train(X ,U, V, Y, T, figure_Dir, dataset,ni, algo=algo, p=p, infGamma=infGamma  ,
     regval = regval, convThreshold=convThreshold, learningRate =learningRate, relThreshold = relThreshold,
-    iterNum = iterNum, k = k, metric=metric)
+    iterNum = iterNum, k = k, metric=metric, epochs=epochs, innerLngRate=innerLngRate, convThreshold=convThreshold )
+
+    println("curTime $curTime")
 
     # write optimized U, V to file
     U_OPT_PATH = string(U_OPT_PATH,"_",curTime,".lsvm")

@@ -85,8 +85,10 @@ end
 function get_pos_items(userVec, relThreshold)
     res = []
     for item in userVec
-        if parse(Int,split(item,":")[2]) >= relThreshold
-            push!(res, item)
+        itemVal = parse(Int,split(item,":")[2])
+        itemIdx = parse(Int,split(item,":")[1])
+        if itemVal >= relThreshold
+            push!(res, itemIdx)
         end
     end
     return res
@@ -97,8 +99,10 @@ end
 function get_neg_items(userVec, relThreshold)
     res = []
     for item in userVec
-        if parse(Int,split(item,":")[2]) < relThreshold
-            push!(res, item)
+        itemVal = parse(Int,split(item,":")[2])
+        itemIdx = parse(Int,split(item,":")[1])
+        if itemVal < relThreshold
+            push!(res, itemIdx)
         end
     end
     return res
@@ -106,10 +110,9 @@ end
 
 
 # @param following convention from paper, xj is V[:,j]
-function get_height(xj, ui, V, posItems)
+function get_height(xj, ui, V, posItemIdxs)
     curHeight = 0
-    for posItem in posItems
-        posItemIdx = parse(Int,split(posItem,":")[1])
+    for posItemIdx in posItemIdxs
         posItemVec = V[:, posItemIdx]
         delta = dot(ui, (posItemVec - xj))
         ri = 0
@@ -167,10 +170,9 @@ function get_heights(userVec, ui, V)
 end
 
 
-function get_reverse_height(xk, ui, V, negItems)
+function get_reverse_height(xk, ui, V, negItemIdxs)
     curRHeight = 0
-    for negItem in negItems
-        negItemIdx = parse(Int,split(negItem,":")[1])
+    for negItemIdx in negItemIdxs
         negItemVec = V[:, negItemIdx]
         delta = dot(ui, (xk - negItemVec))
         ri = 0
@@ -227,6 +229,40 @@ function compareItems(item1, item2)
     end
 end
 
+
+function plotFigure(plotDir, curTime, dataset, algo, ni, k, plotY_eval, plotY_train, plotY_obj)
+    plotX = collect(1:length(plotY_obj))
+    # title("minimizing loss")
+    # ylabel("value of loss")
+    title("PNORM maximizing map@$k")
+    ylabel("value of map@$k")
+    xlabel("iterations")
+    # plot(plotX, plotY_obj, color="red", linewidth =2.0)
+    plot(plotX, plotY_eval, color="blue", linewidth =2.0)
+    plot(plotX, plotY_train, color = "green", linewidth =2.0)
+
+    #make file name
+    filename = plotDir
+    if algo == 1
+        filename = filename * "rnorm_"
+    elseif algo ==2
+        filename =  filename * "pnorm_"
+    else
+        filename =  filename * "inorm_"
+    end
+    if dataset == 1
+        filename =  filename * "yahoo_"
+    elseif dataset == 2
+        filename =  filename * "ml100k_"
+    elseif dataset == 3
+        filename =  filename * "ml1m_"
+    else
+        filename =  filename * "temp_"
+    end
+    filename =  filename * "given$(ni)_"
+    filename =  filename *"$curTime.png"
+    savefig(filename)
+end
 
 
 """
