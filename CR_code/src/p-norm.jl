@@ -1,6 +1,8 @@
 include("util.jl")
 include("metric.jl")
 
+#TODO do param selection on regval 1e−4, 1e−3, 1e−2, 1e−1,1
+
 
 #TODO optimize
 function eval_obj(U, V, X, relThreshold, p)
@@ -174,7 +176,7 @@ function get_p_norm_gradient_by_item(X, U, V, itemId, p,relThreshold)
         end
         # END
     end
-    println("get_p_norm_gradient_by_item: final gradient is $finalRes")
+    # println("get_p_norm_gradient_by_item: final gradient is $finalRes")
     return finalRes
 end
 
@@ -182,15 +184,18 @@ end
 # return optimized U, V
 # ASSUME X is sparse
 # ASSUME U, V are non-sparse
-# @param Y is the test set
-function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, convThreshold=0.0001,
+# @param Y is the validation set, for early stoping
+# @param T is the test set
+function p_norm_optimizer(X, U, V, Y, T, learningRate; p = 2, convThreshold=0.0001,
     regval=0.001, relThreshold = 4, iterNum=200, k = 5, metric=2)
     # test
     println("In PNORM")
     # end
     isConverge = false
-    preVal_obj = 0
-    curVal_obj = 0
+    # preVal_obj = 0
+    # curVal_obj = 0
+    curEvalVali = 0
+    preEvalVali = 0
     userNum = size(U)[2]
     itemNum = size(V)[2]
     println("PNORM size of U $(size(U))")
@@ -206,28 +211,22 @@ function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, convThreshold=0.0001,
     for it in 1:iterNum
         println("Pnorm: On iteration $it")
         println("Start user phase")
-        preVal_obj = curVal_obj
+        preEvalVali = curEvalVali
         for i in 1:userNum
             userVec = X[i, :]
             ui = U[:, i]
-            #### TEST
             gradient = get_p_norm_gradient_by_user(userVec, ui, V,p, relThreshold)
             ragVal =  regval * ui
             U[:, i] = (ui- learningRate * (gradient + ragVal))'
+            #### TEST
             if all(gradient .== 0)
                 println(U[:, i])
                 assert(all(U[:, i] .==0))
                 @assert (ui != U[:,i]) "U[:,i] not updated! gradient is 0"
             end
             #### END
-            # U[:, i] = (ui - (learningRate * get_p_norm_gradient_by_user(userVec, ui, U, V,p, relThreshold) + regval*ui))'
             @assert (ui != U[:,i]) "U[:,i] not updated!"
             @assert (any(isnan,U[:, i]) == false) "ui contains NaN"
-            # println(learningRate)
-            # println(regval)
-            # println(temp1 ./ U[:,i])
-            # println(temp1)
-            # println(U[:,i])
         end
         println("FINISHED user phase")
         # TEST
@@ -261,20 +260,17 @@ function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, convThreshold=0.0001,
             @assert (any(isnan,V[:,h]) == false) "vh contains NaN being $(V[:,h])"
         end
         println("FINISHED item phase")
-        # test
-        # assert(U_temp != U)
-        # assert(V_temp != V)
-        # assert(Y_temp == Y)
-        curVal_eval = evaluate(U, V, Y, k = k, relThreshold = relThreshold, metric=metric)
-        curVal_train = evaluate(U, V, X, k = k, relThreshold = relThreshold,metric=metric)
+        curEvalVali = evaluate(U, V, Y, k = 5, relThreshold = relThreshold, metric=1) # using MAP@5
+        curEvalTest = evaluate(U, V, T, k = k, relThreshold = relThreshold, metric=metric)
+        curEvalTrain = evaluate(U, V, X, k = k, relThreshold = relThreshold,metric=metric)
         # Test evaluate the loss instead
         curVal_obj = eval_obj(U, V, X, relThreshold, p)
 
-        push!(plotY_eval, curVal_eval)
-        push!(plotY_train, curVal_train)
+        push!(plotY_eval, curEvalTest)
+        push!(plotY_train, curEvalTrain)
         push!(plotY_obj, curVal_obj)
-        println("curVal_eval is $curVal_eval")
-        println("curVal_train is $curVal_train")
+        println("curEvalTest is $curEvalTest")
+        println("curEvalTrain is $curEvalTrain")
         println("curVal_obj is $curVal_obj")
         # println("curVal is : $curVal")
         # println("preVal is : $preVal")
@@ -282,15 +278,15 @@ function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, convThreshold=0.0001,
             println("RI")
             continue
         # TEST run full iteration
-        # else
-        #     # diff = (curVal - preVal) # maximizing the map_5
-        #     diff = ( preVal_obj - curVal_obj) # minimizing the loss
-        #     println("Diff is $diff")
-        #     if diff <= convThreshold
-        #         isConverge = true
-        #         count = count+1
-        #         break
-        #     end
+        else
+            diff = (curEvalVali - preEvalVali) # maximizing the map_5
+            # diff = ( preVal_obj - curVal_obj) # minimizing the loss
+            println("Diff is $diff")
+            if diff <= convThreshold
+                isConverge = true
+                count = count+1
+                break
+            end
         end
         # END TEST
         count = count+1
@@ -298,7 +294,7 @@ function p_norm_optimizer(X, U, V, Y, learningRate; p = 2, convThreshold=0.0001,
     end
 
     println("Pnorm: EXITED at iteration $count, convergence is :$isConverge")
-    println("FINAL curVal_obj: $curVal_obj")
+    println("  FINAL curEvalTest: $curEvalTest")
     println("PARAMS")
     println("learningRate: $learningRate, p:$p , convThreshold: $convThreshold,
     regval:$regval, relThreshold:$relThreshold, iterNum:$iterNum, k:$k")

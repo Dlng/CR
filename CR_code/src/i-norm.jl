@@ -1,12 +1,16 @@
 include("util.jl")
 include("metric.jl")
 
+# TODO ADD early stoping for INORM
+# TODO ADD regVal term for INORM
+
 ##############################Solver##################################
 function projsplx(y)
-    copy = y'
-    m = length(copy)
+    s = y'
+    m = length(s)
     bget = false
-    s = sort!(copy, rev=true)
+    sort!(s, rev=true)
+    tmpsum = 0
     for i in 1:m-1
         tmpsum = tmpsum + s[i]
         tmax = (tmpsum -1) / i

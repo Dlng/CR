@@ -85,8 +85,9 @@ end
 function get_pos_items(userVec, relThreshold)
     res = []
     for item in userVec
-        itemVal = parse(Int,split(item,":")[2])
-        itemIdx = parse(Int,split(item,":")[1])
+        temp = split(item,":")
+        itemVal = parse(Int,temp[2])
+        itemIdx = parse(Int,temp[1])
         if itemVal >= relThreshold
             push!(res, itemIdx)
         end
@@ -99,8 +100,9 @@ end
 function get_neg_items(userVec, relThreshold)
     res = []
     for item in userVec
-        itemVal = parse(Int,split(item,":")[2])
-        itemIdx = parse(Int,split(item,":")[1])
+        temp = split(item,":")
+        itemVal = parse(Int,temp[2])
+        itemIdx = parse(Int,temp[1])
         if itemVal < relThreshold
             push!(res, itemIdx)
         end

@@ -15,7 +15,8 @@ VPATH = "/Users/Weilong/Codes/cofirank/out_bak/M.lsvm"
 # remove users with no neg or pos rating, remove the matching cols in U,V too
 function preprocessing(X, U, Y, T, relThreshold)
     idxs = []
-    for userId  in 1:size(X)[1]
+    numRow = size(X)[1]
+    for userId  in 1:numRow
         pos_counter = 0
         neg_counter = 0
         row = X[userId,:]
@@ -49,13 +50,13 @@ function train(X, U, V, Y, T, plotDir, dataset,ni;  algo=2, p=2, infGamma=10  ,r
     println("TEST: $typeof(algo)")
     if algo == 1
         regval = 1/infGamma
-        U_opt, V_opt, curTime, plotY_eval, plotY_train,plotY_obj = r_norm_optimizer(X, U, V, Y, learningRate=learningRate,regval=regval, infGamma=infGamma, relThreshold= relThreshold,
+        U_opt, V_opt, curTime, plotY_eval, plotY_train,plotY_obj = r_norm_optimizer(X, U, V, Y, T, learningRate=learningRate,regval=regval, infGamma=infGamma, relThreshold= relThreshold,
         iterNum=iterNum, k = k, metric=metric)
     elseif algo == 2
-        U_opt, V_opt , curTime, plotY_eval, plotY_train,plotY_obj= p_norm_optimizer(X, U, V, Y, learningRate, p = p,convThreshold=convThreshold, regval=regval,
+        U_opt, V_opt , curTime, plotY_eval, plotY_train,plotY_obj= p_norm_optimizer(X, U, V, Y, T, learningRate, p = p,convThreshold=convThreshold, regval=regval,
         relThreshold= relThreshold, iterNum=iterNum, k = k, metric=metric)
     else
-        U_opt, V_opt, curTime,plotY_eval, plotY_train,plotY_obj = i_norm_optimizer(X, U, V, Y, learningRate=learningRate, regval=regval,
+        U_opt, V_opt, curTime,plotY_eval, plotY_train,plotY_obj = i_norm_optimizer(X, U, V, Y, T, learningRate=learningRate, regval=regval,
         infGamma=infGamma,innerLngRate = innerLngRate,convThreshold=convThreshold, relThreshold= relThreshold, iterNum=iterNum,epochs = epochs, k = k, metric=metric)
     end
     plotFigure(plotDir, curTime, dataset, algo, ni, k, plotY_eval, plotY_train, plotY_obj)
@@ -63,7 +64,7 @@ function train(X, U, V, Y, T, plotDir, dataset,ni;  algo=2, p=2, infGamma=10  ,r
     return U_opt, V_opt, curTime
 end
 
-#TODO use validatation set to select model params
+#TODO use validatation set to select regVal
 function select_params()
 end
 
