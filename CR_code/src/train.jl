@@ -50,14 +50,19 @@ function train(X, U, V, Y, T, plotDir, dataset,ni;  algo=2, p=2, infGamma=10  ,r
     println("TEST: $typeof(algo)")
     if algo == 1
         regval = 1/infGamma
-        U_opt, V_opt, curTime, plotY_eval, plotY_train,plotY_obj = r_norm_optimizer(X, U, V, Y, T, learningRate=learningRate,regval=regval, infGamma=infGamma, relThreshold= relThreshold,
+        U_opt, V_opt, curTime, plotY_eval, plotY_train,plotY_obj =
+        r_norm_optimizer(X, U, V, Y, T, learningRate=learningRate,
+        convThreshold=convThreshold, regval=regval, relThreshold= relThreshold,
         iterNum=iterNum, k = k, metric=metric)
     elseif algo == 2
-        U_opt, V_opt , curTime, plotY_eval, plotY_train,plotY_obj= p_norm_optimizer(X, U, V, Y, T, learningRate, p = p,convThreshold=convThreshold, regval=regval,
+        U_opt, V_opt , curTime, plotY_eval, plotY_train,plotY_obj =
+         p_norm_optimizer(X, U, V, Y, T, learningRate, p = p,convThreshold=convThreshold, regval=regval,
         relThreshold= relThreshold, iterNum=iterNum, k = k, metric=metric)
     else
-        U_opt, V_opt, curTime,plotY_eval, plotY_train,plotY_obj = i_norm_optimizer(X, U, V, Y, T, learningRate=learningRate, regval=regval,
-        infGamma=infGamma,innerLngRate = innerLngRate,convThreshold=convThreshold, relThreshold= relThreshold, iterNum=iterNum,epochs = epochs, k = k, metric=metric)
+        U_opt, V_opt, curTime,plotY_eval, plotY_train,plotY_obj =
+        i_norm_optimizer(X, U, V, Y, T, learningRate=learningRate, regval=regval,
+        infGamma=infGamma,innerLngRate = innerLngRate,convThreshold=convThreshold,
+        relThreshold= relThreshold, iterNum=iterNum,epochs = epochs, k = k, metric=metric)
     end
     plotFigure(plotDir, curTime, dataset, algo, ni, k, plotY_eval, plotY_train, plotY_obj)
 
@@ -82,7 +87,7 @@ function evaluate(U, V, Y; k=5, relThreshold =4, metric=1)
         testVecIds = [parse(Int64,split(item, ":")[1]) for item in testVec  if item != ""]
         testVecScores = [parse(Int64,split(item, ":")[2]) for item in testVec  if item != ""]
         #get predictions
-        preds = [dot(ui, V[:, id]) for id in testVecIds]
+        preds = [dot(ui, V[:, id]) for id in testVecIds] # TODO: BUG idx out of bound
         predictions = [(val, id) for (id, val) in enumerate(preds)]
         temp = sort(predictions,rev = true) # sort by first element
         y_predict_idxs = [ item[2] for item in temp]

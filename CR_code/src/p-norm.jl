@@ -47,30 +47,37 @@ function get_p_norm_gradient_by_user(userVec,ui, V, p, relThreshold)
             tempSum += sigma(t) * (negItemVec - posItemVec)
             # println("g-user: dot product is : $t")
             # println("g-user: posItemVec is : $posItemVec")
+            #TEST
+            if curHeight == 0 || all(tempSum .== 0) # means it has reaches optimum
+                println("in get_p_norm_gradient_by_user")
+
+                println(size(posItemIdxs))
+                println(size(negItemIdxs))
+
+                println("curHeight :$curHeight")
+                println("tempSum: $tempSum")
+                println("t is : $t")
+                println("negItemVec: $negItemVec")
+                println("posItemVec: $posItemVec")
+                println("ui: $ui")
+                println(" ")
+            end
+            #END
         end
         res +=  curHeight ^ (p-1) * tempSum
-        # println(" ")
-        # println("g-user: ui is : $ui")
-        # println("g-user: negItemVec is : $negItemVec")
-        # println("g-user: tempSum is : $tempSum")
-        # println("g-user: curHeight is : $curHeight")
-        # println("g-user: cur gradient is : $res")
-        # println(" ")
-        # println(" ")
         #TEST
-        if all(res .== 0)
-            println("in get_p_norm_gradient_by_user")
-
-            println(size(posItemIdxs))
-            println(size(negItemIdxs))
-
-            println(curHeight)
-            println(tempSum)
-            println("negItemVec: $negItemVec")
-            println("posItemVec: $posItemVec")
-            println("ui: $ui")
-            println(" ")
-        end
+        # if all(res .== 0) # means it has reaches optimum
+        #     println("in get_p_norm_gradient_by_user")
+        #
+        #     println(size(posItemIdxs))
+        #     println(size(negItemIdxs))
+        #
+        #     println(curHeight)
+        #     println(tempSum)
+        #     println("negItemVec: $negItemVec")
+        #     println("ui: $ui")
+        #     println(" ")
+        # end
         #END
     end
     return (p / ni)  * res
@@ -80,8 +87,8 @@ end
 function get_p_norm_gradient_by_item(X, U, V, itemId, p,relThreshold)
     posUsers = get_pos_users(X, itemId,relThreshold)
     negUsers = get_neg_users(X, itemId,relThreshold)
-    # println(size(posUsers))
-    # println(size(negUsers))
+    println("get_p_norm_gradient_by_item: size of posUsers $size(posUsers)")
+    println(size(negUsers))
     finalRes = 0
     for userId in negUsers
         ui = U[:,userId]
@@ -100,21 +107,18 @@ function get_p_norm_gradient_by_item(X, U, V, itemId, p,relThreshold)
                 posItemVec = V[:, posItemIdx]
                 t =  dot(ui, ( posItemVec -negItemVec))
                 tempSum += sigma(t) * ui
+                # TEST
                 # println("g-item: dot product is : $t")
                 # println("g-item: posItemVec is : $posItemVec")
+                # println("g-item: negItemVec is : $negItemVec")
+                # println("g-item: tempSum is : $tempSum")
+                # println("g-item: curHeight is : $curHeight")
+                # println("g-item: res is : $res")
+                # println(" ")
+                # END
             end
 
             res +=  curHeight ^ (p-1) * tempSum
-            #TEST
-            # println(" ")
-            # println("g-item: ui is : $ui")
-            # println("g-item: negItemVec is : $negItemVec")
-            # println("g-item: tempSum is : $tempSum")
-            # println("g-item: curHeight is : $curHeight")
-            # println("g-item: res is : $res")
-            # println(" ")
-            # println(" ")
-            #END TEST
         end
         finalRes += (p / ni) * res
     end
@@ -137,8 +141,17 @@ function get_p_norm_gradient_by_item(X, U, V, itemId, p,relThreshold)
             for posItemIdx in posItemIdxs
                 posItemVec = V[:, posItemIdx]
                 t =  dot(ui, ( posItemVec -negItemVec))
-                # tempSum += sigma((ui' * (negItemVec - posItemVec))[1]) * ui
                 tempSum += sigma(t) * ui
+                # TEST
+                # println("g-item PosUsers: dot product is : $t")
+                # println("g-item PosUsers: posItemVec is : $posItemVec")
+                # println("g-item PosUsers: negItemVec is : $negItemVec")
+                # println("g-item PosUsers: tempSum is : $tempSum")
+                # println("g-item PosUsers: curHeight is : $curHeight")
+                # println("g-item PosUsers: res is : $res")
+                # println(" ")
+                # END
+
                 # TEST
                 if any(isnan.(tempSum))
                     println("PosUsers: curHeight is : $curHeight")
@@ -150,7 +163,7 @@ function get_p_norm_gradient_by_item(X, U, V, itemId, p,relThreshold)
 
                 # END
             end
-            res +=  curHeight ^ (p-1) * tempSum
+            res +=  (curHeight ^ (p-1)) * tempSum
             # TEST
             if any(isnan.(res))
                 println("RES is NAN")
@@ -176,7 +189,7 @@ function get_p_norm_gradient_by_item(X, U, V, itemId, p,relThreshold)
         end
         # END
     end
-    # println("get_p_norm_gradient_by_item: final gradient is $finalRes")
+    println("get_p_norm_gradient_by_item: final gradient is $finalRes")
     return finalRes
 end
 
@@ -188,12 +201,8 @@ end
 # @param T is the test set
 function p_norm_optimizer(X, U, V, Y, T, learningRate; p = 2, convThreshold=0.0001,
     regval=0.001, relThreshold = 4, iterNum=200, k = 5, metric=2)
-    # test
     println("In PNORM")
-    # end
     isConverge = false
-    # preVal_obj = 0
-    # curVal_obj = 0
     curEvalVali = 0
     preEvalVali = 0
     userNum = size(U)[2]
@@ -215,6 +224,7 @@ function p_norm_optimizer(X, U, V, Y, T, learningRate; p = 2, convThreshold=0.00
         for i in 1:userNum
             userVec = X[i, :]
             ui = U[:, i]
+            # println("TEST userId i : $i")
             gradient = get_p_norm_gradient_by_user(userVec, ui, V,p, relThreshold)
             ragVal =  regval * ui
             U[:, i] = (ui- learningRate * (gradient + ragVal))'
@@ -245,12 +255,15 @@ function p_norm_optimizer(X, U, V, Y, T, learningRate; p = 2, convThreshold=0.00
             gradient = get_p_norm_gradient_by_item(X, U, V, itemId, p, relThreshold)
             ragVal =  regval * vh
             # # println(vh./gradient)
-            # # println(ragVal)
+
 
             # println(" ")
             ########## CHECK Matrix op gives NaN
-            # println(V[:,h])
-            # println(gradient) ## gradient is NaN
+            println(" ")
+            println("vh is $(V[:,h])")
+            println(ragVal)
+            println(gradient) ## gradient is NaN
+            println(" ")
             V[:, h] = (vh - learningRate *(gradient + ragVal))'
             # println("learning rate is $learningRate")
             # println(ragVal)
@@ -272,8 +285,6 @@ function p_norm_optimizer(X, U, V, Y, T, learningRate; p = 2, convThreshold=0.00
         println("curEvalTest is $curEvalTest")
         println("curEvalTrain is $curEvalTrain")
         println("curVal_obj is $curVal_obj")
-        # println("curVal is : $curVal")
-        # println("preVal is : $preVal")
         if it == 1
             println("RI")
             continue
@@ -294,7 +305,6 @@ function p_norm_optimizer(X, U, V, Y, T, learningRate; p = 2, convThreshold=0.00
     end
 
     println("Pnorm: EXITED at iteration $count, convergence is :$isConverge")
-    println("  FINAL curEvalTest: $curEvalTest")
     println("PARAMS")
     println("learningRate: $learningRate, p:$p , convThreshold: $convThreshold,
     regval:$regval, relThreshold:$relThreshold, iterNum:$iterNum, k:$k")

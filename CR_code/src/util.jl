@@ -124,7 +124,7 @@ function get_height(xj, ui, V, posItemIdxs)
         else
             ri = -delta
         end
-
+        @assert (!isnan(delta)) "delta is  nan in get height"
         #TEST
         if ri == Inf || isnan(ri) || isnan(curHeight)
             temp = posItemVec-xj
@@ -219,6 +219,7 @@ end
 
 
 function sigma(x)
+    @assert (!isnan(x)) "input to sigma is nan"
     return 1 / (1 + exp(x))
 end
 

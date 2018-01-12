@@ -160,11 +160,12 @@ end
 # ASSUME X is sparse
 # ASSUME U, V are non-sparse
 # @param Y is the validation set
-function r_norm_optimizer(X, U, V, Y, learningRate; threshold=0.0001,regval=regval,
+function r_norm_optimizer(X, U, V, Y, T; learningRate=0.0001, convThreshold=0.0001,regval=regval,
     relThreshold = 4, iterNum=200, k=5, metric = 2)
+    println("In RNORM")
     isConverge = false
-    preVal_obj = 0
-    curVal_obj = 0
+    curEvalVali = 0
+    preEvalVali = 0
     userNum = size(U)[2]
     itemNum = size(V)[2]
     count = 1
@@ -177,7 +178,7 @@ function r_norm_optimizer(X, U, V, Y, learningRate; threshold=0.0001,regval=regv
     for it in 1:iterNum
         println("RNORM: On iteration $it")
         println("RNORM: Start user phase")
-        preVal_obj = curVal_obj
+        preEvalVali = curEvalVali
         for i in 1:userNum
             userVec = X[i, :]
             ui = U[:, i]
@@ -227,49 +228,42 @@ function r_norm_optimizer(X, U, V, Y, learningRate; threshold=0.0001,regval=regv
             @assert (any(isnan,V[:,h]) == false) "vh contains NaN being $(V[:,h])"
         end
         println("RNORM: FINISHED item phase")
-        # test
-        # assert(U_temp != U)
-        # assert(V_temp != V)
-        # assert(Y_temp == Y)
-        curVal_eval = evaluate(U, V, Y, k = k,relThreshold = relThreshold, metric=metric)
-        curVal_train = evaluate(U, V, X, k = k,relThreshold = relThreshold, metric=metric)
+
+        curEvalVali = evaluate(U, V, Y, k = 5, relThreshold = relThreshold, metric=1) # using MAP@5
+        curEvalTest = evaluate(U, V, T, k = k, relThreshold = relThreshold, metric=metric)
+        curEvalTrain = evaluate(U, V, X, k = k, relThreshold = relThreshold,metric=metric)
         # Test evaluate the loss instead
         curVal_obj = eval_obj(U, V, X, relThreshold)
 
-        push!(plotY_eval, curVal_eval)
-        push!(plotY_train, curVal_train)
+        push!(plotY_eval, curEvalTest)
+        push!(plotY_train, curEvalTrain)
         push!(plotY_obj, curVal_obj)
-
-        # println("curVal is : $curVal")
-        # println("preVal is : $preVal")
+        println("curEvalTest is $curEvalTest")
+        println("curEvalTrain is $curEvalTrain")
+        println("curVal_obj is $curVal_obj")
         if it == 1
             println("RI")
             continue
         # TEST run full iteration
         else
-            # diff = (curVal - preVal) # maximizing the map_5
-            diff = ( preVal_obj - curVal_obj) # minimizing the loss
+            diff = (curEvalVali - preEvalVali) # maximizing the map_5
+            # diff = ( preVal_obj - curVal_obj) # minimizing the loss
             println("Diff is $diff")
-            if diff <= threshold
+            if diff <= convThreshold
                 isConverge = true
                 count = count+1
                 break
             end
         end
-        # # if Metric.is_converged(X, U, V, Y,threshold=0.0001)
-        # if is_converged(X, U, V, Y,threshold=0.0001)
-        #     isConverge = true
-        #     break
-        # end
         count = count+1
         println("RNORM: FINISHED iteration $it, curVal_obj is : $curVal_obj")
     end
 
     println("RNORM: EXITED at iteration $count, convergence is :$isConverge")
-    println("RNORM: FINAL curVal_obj: $curVal_obj")
+
 
     println("PARAMS")
-    println("learningRate: $learningRate, threshold: $threshold,
+    println("learningRate: $learningRate, convThreshold: $convThreshold,
     regval:$regval, relThreshold:$relThreshold, iterNum:$iterNum, k:$k")
     println("END PARAMS")
 
