@@ -3,26 +3,35 @@
 """
 Util
 """
-function read_numeric_matrix_from_file(path, dimW, m)
+function read_numeric_matrix_from_file(path,m,dimW)
+    # debug("m is $m")
+    # debug("dimW is $dimW")
     res = zeros(m,dimW)
+    @assert all(res .== 0)
     rowCnt = 1
     open(path, "r") do f
         for line in eachline(f)
-            # println(typeof(line))
-            # println(line)
-            # println(isempty(line))
-            # println(length(line))
+            # debug(typeof(line))
+            # debug(line)
+            # debug(isempty(line))
+            # debug(length(line))
             # if line == ""
             if length(line) == 1 || line == ""
                 res[rowCnt, :] = randn(dimW)
             else
                 tempLine = split(strip(line),' ')
                 tempLine2 = [parse(Float64, x) for x in tempLine] #TODO error parse("")
+                #TEST
+                if any(tempLine2 .>= 1e5)
+                    print(tempLine2)
+                end
+                #END
                 res[rowCnt, :] = tempLine2
             end
             rowCnt += 1
         end
     end
+
     return res
 end
 
@@ -85,6 +94,9 @@ end
 function get_pos_items(userVec, relThreshold)
     res = []
     for item in userVec
+        if item == ""
+            continue
+        end
         temp = split(item,":")
         itemVal = parse(Int,temp[2])
         itemIdx = parse(Int,temp[1])
@@ -100,6 +112,9 @@ end
 function get_neg_items(userVec, relThreshold)
     res = []
     for item in userVec
+        if item == ""
+            continue
+        end
         temp = split(item,":")
         itemVal = parse(Int,temp[2])
         itemIdx = parse(Int,temp[1])
@@ -110,38 +125,65 @@ function get_neg_items(userVec, relThreshold)
     return res
 end
 
-
-# @param following convention from paper, xj is V[:,j]
-function get_height(xj, ui, V, posItemIdxs)
+function get_height_convex(M, userId, negItemIdx, posItemIdxs)
     curHeight = 0
+    userRow = M[userId, :]
+    curNegItemVal = userRow[negItemIdx]
+
     for posItemIdx in posItemIdxs
-        posItemVec = V[:, posItemIdx]
-        delta = dot(ui, (posItemVec - xj))
+        curPosItemVal = userRow[posItemIdx]
+        delta = curPosItemVal - curNegItemVal
         ri = 0
-        # println("delta is $delta")
-        if delta > -100 # FIX
+        if delta > -100  # FIX
+            @assert (exp(-delta) != Inf) "exp(-delta) is Inf"
             ri = log(1 + exp(-delta))
         else
             ri = -delta
         end
-        @assert (!isnan(delta)) "delta is  nan in get height"
+        @assert (!isnan(delta)) "delta is nan in get height"
+        #END TEST
+        curHeight += ri
+    end
+    @assert (curHeight != Inf) "curHeight is Inf"
+    @assert (isnan(curHeight) == false) "curHeight is NaN"
+    @assert (curHeight >= 0) "curHeight is $curHeight"
+    return curHeight
+end
+
+# @param following convention from paper, xj is V[:,j]
+function get_height(xj, ui, V, posItemIdxs)
+    # debug("get_height xj: $xj")
+    # debug("get_height ui: $ui")
+    curHeight = 0
+    for posItemIdx in posItemIdxs
+        posItemVec = deepcopy(V[:, posItemIdx])
+        delta = dot(ui, (posItemVec - xj))
+        ri = 0
+        # debug("delta is $delta")
+        if delta > -100  # FIX
+            @assert (exp(-delta) != Inf) "exp(-delta) is Inf"
+            ri = log(1 + exp(-delta))
+        else
+            ri = -delta
+        end
+        @assert (!isnan(delta)) "delta is nan in get height"
         #TEST
         if ri == Inf || isnan(ri) || isnan(curHeight)
             temp = posItemVec-xj
             temp2 = ui' * temp # why this is NAN
-            println("in get height ")
-            println(ri)
-            println(temp)
-            println(temp2)
-            println(delta)
+            debug("in get height ")
+            debug(ri)
+            debug(temp)
+            debug(temp2)
+            debug(delta)
 
-            println(size(ui) == size(temp))
+            debug(size(ui) == size(temp))
 
-            println(ui)
-            println(posItemVec)
-            println(xj)
-            println(" ")
-            # println(log((1 + exp(-delta))))
+            debug(ui)
+            debug(posItemVec)
+            debug(xj)
+            debug(" ")
+            # debug(log((1 + exp(-delta))))
         end
         #END TEST
         curHeight += ri
@@ -172,14 +214,39 @@ function get_heights(userVec, ui, V)
 end
 
 
+function get_reverse_height_convex(M, userId, posItemIdx, negItemIdxs)
+    curRHeight = 0
+    userRow = M[userId, :]
+    curPosItemVal = userRow[posItemIdx]
+
+    for negItemIdx in negItemIdxs
+        curNegItemVal = userRow[negItemIdx]
+        delta = curPosItemVal - curNegItemVal
+        ri = 0
+        if delta > -100  # FIX
+            @assert (exp(-delta) != Inf) "exp(-delta) is Inf"
+            ri = log(1 + exp(-delta))
+        else
+            ri = -delta
+        end
+        @assert (!isnan(delta)) "delta is nan in get height"
+        curRHeight += ri
+    end
+    @assert (curRHeight != Inf) "curRHeight is Inf"
+    @assert (isnan(curRHeight) == false) "curRHeight is NaN"
+    @assert (curRHeight >= 0) "curRHeight is $curRHeight"
+    return curRHeight
+end
+
 function get_reverse_height(xk, ui, V, negItemIdxs)
     curRHeight = 0
     for negItemIdx in negItemIdxs
         negItemVec = V[:, negItemIdx]
         delta = dot(ui, (xk - negItemVec))
         ri = 0
-        # println("delta is $delta")
+        # debug("delta is $delta")
         if delta > -100 # FIX
+            @assert (exp(-delta) != Inf) "exp(-delta) is Inf"
             ri = log(1 + exp(-delta))
         else
             ri = -delta
@@ -233,37 +300,43 @@ function compareItems(item1, item2)
 end
 
 
-function plotFigure(plotDir, curTime, dataset, algo, ni, k, plotY_eval, plotY_train, plotY_obj)
+function plotFigure(plotDir, curTime, dataset,useCofi, algo, metric, ni, k, plotY_eval, plotY_train, plotY_obj)
     plotX = collect(1:length(plotY_obj))
     # title("minimizing loss")
     # ylabel("value of loss")
-    title("PNORM maximizing map@$k")
+
+    algoName = ""
+    if algo == 1
+        algoName =  "rnorm"
+    elseif algo ==2
+        algoName =   "pnorm"
+    else
+        algoName =   "inorm"
+    end
+
+    metricName = ""
+    if metric == 1
+        metricName = "MAP"
+    else
+        metricName = "NDCG"
+    end
+
+    title("$algoName maximizing $metricName@$k")
     ylabel("value of map@$k")
     xlabel("iterations")
     # plot(plotX, plotY_obj, color="red", linewidth =2.0)
-    plot(plotX, plotY_eval, color="blue", linewidth =2.0)
-    plot(plotX, plotY_train, color = "green", linewidth =2.0)
+    grid(b=true)
+    plot(plotX, plotY_eval, color="blue", label="test MAP", linewidth =2.0)
+    plot(plotX, plotY_train, color = "green", label ="train MAP", linewidth =2.0)
+    legend(loc=1)
 
     #make file name
-    filename = plotDir
-    if algo == 1
-        filename = filename * "rnorm_"
-    elseif algo ==2
-        filename =  filename * "pnorm_"
+    if useCofi == false
+        filename = plotDir *  algoName *"_rand" * "_" * dataset * "_given$(ni)_" *"$curTime.svg"
     else
-        filename =  filename * "inorm_"
+        filename = plotDir *  algoName * "_" * dataset * "_given$(ni)_" *"$curTime.svg"
     end
-    if dataset == 1
-        filename =  filename * "yahoo_"
-    elseif dataset == 2
-        filename =  filename * "ml100k_"
-    elseif dataset == 3
-        filename =  filename * "ml1m_"
-    else
-        filename =  filename * "temp_"
-    end
-    filename =  filename * "given$(ni)_"
-    filename =  filename *"$curTime.png"
+
     savefig(filename)
 end
 

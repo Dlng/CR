@@ -1,8 +1,8 @@
-# using Train
-
 include("train.jl")
 using ConfParser
+using Logging
 using PyPlot
+# using PrintLog
 # 1. read in config
 # setup logger and trainer
 # train
@@ -11,7 +11,7 @@ using PyPlot
 
 #! dimW should be consistent with ~/Codes/cofirank/config/real.cfg:dimW
 function main()
-    println(111)
+    debug(111)
     # configPath = ARGS[1]
     # configPath = "/home/weilong/CR/CR_code/config/default.ini"
     # configPath = "/Users/Weilong/Codes/CR/CR_code/config/default.ini"
@@ -60,7 +60,14 @@ function main()
     U_OPT_PATH = retrieve(conf, dataset, "U_OPT_PATH")
     V_OPT_PATH = retrieve(conf, dataset, "V_OPT_PATH")
     figure_Dir = retrieve(conf, dataset, "figure_Dir")
+    log_path = retrieve(conf, dataset, "log_path")
 
+    curTime = Dates.value(now())
+    #set up logger
+    log_file = log_path * dataset * "_$algo"  * "_$useCofi"  * "_given$ni"  * "_$curTime" *".txt"
+
+    Logging.configure(level=DEBUG, filename=log_file)
+    # Logging.configure(level=OFF) # turn logger off
 
 
 
@@ -82,53 +89,55 @@ function main()
     else
         U = []
         V = [] # TODO optimize
-        U = read_numeric_matrix_from_file(U_PATH, dimW, m)
-        V = read_numeric_matrix_from_file(V_PATH, dimW, n)
-
-        U = U'
-        V = V'
-        println(size(U)[2])
-        println(size(V)[2])
-        # @assert size(U) == (dimW,m) "Wrong dim in U_PATH $(size(U))"
-        # @assert size(V) == (dimW,n) "Wrong dim in V_PATH $(size(V))"
+        U = read_numeric_matrix_from_file(U_PATH, m,dimW)
+        V = read_numeric_matrix_from_file(V_PATH, n,dimW)
+        U = transpose(U)
+        V = transpose(V)
+        debug(size(U)[2])
+        debug(size(V)[2])
+        @assert any(U .< 100) "U contains entry >= 1e5"
+        @assert any(V .< 100) "V contains entry >= 1e5"
     end
 
 
     # print configs
-    println("START PRINTING CONFIGs")
-    println("dataset $dataset")
-    println("ni $ni")
-    println("dimW $dimW")
-    println("algo $algo")
-    println("p $p")
-    println("useCofi $useCofi")
-    println("infGamma $infGamma")
-    println("regval $regval")
-    println("learningRate $learningRate")
-    println("relThreshold $relThreshold")
-    println("convThreshold $convThreshold")
-    println("iterNum $iterNum")
-    println("k $k")
-    println("metric $metric")
-    println("epochs $epochs")
-    println("innerLngRate $innerLngRate")
-    println("convThreshold $convThreshold")
-    println("TRAIN_PATH $TRAIN_PATH")
-    println("VALIDATE_PATH $VALIDATE_PATH")
-    println("TEST_PATH $TEST_PATH")
-    println("U_PATH $U_PATH")
-    println("V_PATH $V_PATH")
-    println("U_OPT_PATH $U_OPT_PATH")
-    println("V_OPT_PATH $V_OPT_PATH")
-    println("figure_Dir $figure_Dir")
-    println("END PRINTING CONFIGs")
-    U, V, curTime = train(X ,U, V, Y, T, figure_Dir, dataset,ni, algo=algo, p=p, infGamma=infGamma  ,
+    debug("START PRINTING CONFIGs")
+    debug("dataset $dataset")
+    debug("ni $ni")
+    debug("dimW $dimW")
+    debug("algo $algo")
+    debug("p $p")
+    debug("useCofi $useCofi")
+    debug("infGamma $infGamma")
+    debug("regval $regval")
+    debug("learningRate $learningRate")
+    debug("relThreshold $relThreshold")
+    debug("convThreshold $convThreshold")
+    debug("iterNum $iterNum")
+    debug("k $k")
+    debug("metric $metric")
+    debug("epochs $epochs")
+    debug("innerLngRate $innerLngRate")
+    debug("innerConvThreshold $innerConvThreshold")
+    debug("TRAIN_PATH $TRAIN_PATH")
+    debug("VALIDATE_PATH $VALIDATE_PATH")
+    debug("TEST_PATH $TEST_PATH")
+    debug("U_PATH $U_PATH")
+    debug("V_PATH $V_PATH")
+    debug("U_OPT_PATH $U_OPT_PATH")
+    debug("V_OPT_PATH $V_OPT_PATH")
+    debug("figure_Dir $figure_Dir")
+    debug("curTime $curTime")
+    debug("END PRINTING CONFIGs")
+    U, V= train(X ,U, V, Y, T, figure_Dir, dataset,useCofi, curTime, ni, algo=algo, p=p, infGamma=infGamma  ,
     regval = regval, convThreshold=convThreshold, learningRate =learningRate, relThreshold = relThreshold,
-    iterNum = iterNum, k = k, metric=metric, epochs=epochs, innerLngRate=innerLngRate, convThreshold=convThreshold )
-
-    println("curTime $curTime")
+    iterNum = iterNum, k = k, metric=metric, epochs=epochs, innerLngRate=innerLngRate, innerConvThreshold=innerConvThreshold )
 
     # write optimized U, V to file
+    if useCofi == false
+        U_OPT_PATH = string(U_OPT_PATH,"_","rand")
+        V_OPT_PATH = string(V_OPT_PATH,"_","rand")
+    end
     U_OPT_PATH = string(U_OPT_PATH,"_",curTime,".lsvm")
     V_OPT_PATH = string(V_OPT_PATH,"_",curTime,".lsvm")
     writedlm(U_OPT_PATH, U, ", ")

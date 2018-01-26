@@ -36,37 +36,39 @@ function preprocessing(X, U, Y, T, relThreshold)
     Y = Y[setdiff(1:end, idxs), : ] # m,10
     T = T[setdiff(1:end, idxs), :] # m,20 (or more)
     return X, U, Y, T
-
 end
 
 # @param infGamma is for inf push,
 # @param regval is the regularization coeff.
-function train(X, U, V, Y, T, plotDir, dataset,ni;  algo=2, p=2, infGamma=10  ,regval = 1,convThreshold=0.0001,
-     learningRate =0.0001, relThreshold = 4, iterNum=200, k = 5, metric=2, epochs=200, innerLngRate=0.01)
+function train(X, U, V, Y, T, plotDir, dataset, useCofi, curTime, ni;  algo=2, p=2, infGamma=10  ,regval = 1,convThreshold=0.0001,
+     learningRate =0.0001, relThreshold = 4, iterNum=200, k = 5, metric=2, epochs=200, innerLngRate=0.01, innerConvThreshold=0.01)
     assert(isnull(U) == false)
     assert(isnull(V) == false)
     X, U,Y,T= preprocessing(X, U, Y, T,relThreshold)
-    println("TEST: $algo")
-    println("TEST: $typeof(algo)")
+    debug("TEST: $algo")
+    debug("TEST: $typeof(algo)")
+    tic() # for timing
     if algo == 1
-        regval = 1/infGamma
-        U_opt, V_opt, curTime, plotY_eval, plotY_train,plotY_obj =
+        U_opt, V_opt, plotY_eval, plotY_train,plotY_obj =
         r_norm_optimizer(X, U, V, Y, T, learningRate=learningRate,
         convThreshold=convThreshold, regval=regval, relThreshold= relThreshold,
         iterNum=iterNum, k = k, metric=metric)
     elseif algo == 2
-        U_opt, V_opt , curTime, plotY_eval, plotY_train,plotY_obj =
+        U_opt, V_opt , plotY_eval, plotY_train,plotY_obj =
          p_norm_optimizer(X, U, V, Y, T, learningRate, p = p,convThreshold=convThreshold, regval=regval,
         relThreshold= relThreshold, iterNum=iterNum, k = k, metric=metric)
     else
-        U_opt, V_opt, curTime,plotY_eval, plotY_train,plotY_obj =
+        regval = 1/infGamma
+        U_opt, V_opt, plotY_eval, plotY_train,plotY_obj =
         i_norm_optimizer(X, U, V, Y, T, learningRate=learningRate, regval=regval,
-        infGamma=infGamma,innerLngRate = innerLngRate,convThreshold=convThreshold,
+        infGamma=infGamma,innerLngRate = innerLngRate,innerConvThreshold=innerConvThreshold, convThreshold=convThreshold,
         relThreshold= relThreshold, iterNum=iterNum,epochs = epochs, k = k, metric=metric)
     end
-    plotFigure(plotDir, curTime, dataset, algo, ni, k, plotY_eval, plotY_train, plotY_obj)
 
-    return U_opt, V_opt, curTime
+    toc() # for timing
+    plotFigure(plotDir, curTime, dataset, useCofi,algo, metric, ni, k, plotY_eval, plotY_train, plotY_obj)
+
+    return U_opt, V_opt
 end
 
 #TODO use validatation set to select regVal
