@@ -125,11 +125,8 @@ function get_neg_items(userVec, relThreshold)
     return res
 end
 
-function get_height_convex(M, userId, negItemIdx, posItemIdxs)
+function get_height_convex(userRowM, curNegItemVal, posItemIdxs)
     curHeight = 0
-    userRow = M[userId, :]
-    curNegItemVal = userRow[negItemIdx]
-
     for posItemIdx in posItemIdxs
         curPosItemVal = userRow[posItemIdx]
         delta = curPosItemVal - curNegItemVal
@@ -214,11 +211,8 @@ function get_heights(userVec, ui, V)
 end
 
 
-function get_reverse_height_convex(M, userId, posItemIdx, negItemIdxs)
+function get_reverse_height_convex(userRowM, curPosItemVal, negItemIdxs)
     curRHeight = 0
-    userRow = M[userId, :]
-    curPosItemVal = userRow[posItemIdx]
-
     for negItemIdx in negItemIdxs
         curNegItemVal = userRow[negItemIdx]
         delta = curPosItemVal - curNegItemVal
