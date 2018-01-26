@@ -5,7 +5,7 @@ function test_get_pos_items()
     actual =  get_pos_items(userVec)
     expected = ["4:1" ,"9:1"]
     assert(actual == expected)
-    println("test passed")
+    debug("test passed")
 end
 
 function test_get_neg_items()
@@ -13,7 +13,7 @@ function test_get_neg_items()
     actual =  get_neg_items(userVec)
     expected = ["1:-1" ,"2:-1" ,"3:-1","6:-1" ,"8:-1" ,"11:-1"]
     assert(actual == expected)
-    println("test passed")
+    debug("test passed")
 end
 
 
@@ -28,14 +28,14 @@ function test_get_height()
     ui = U[:, 1]
     xj = V[:, 1]
     posItems = ["4:1" ,"9:1"]
-    println(get_height(xj,ui, V, posItems))
+    debug(get_height(xj,ui, V, posItems))
 end
 
 function test_get_pos_users()
     X = readdlm("/Users/Weilong/Desktop/Webscope_R1/temp/train.lsvm")
     itemId = 2
     res = get_pos_users(X, itemId)
-    println(size(res))
+    debug(size(res))
 end
 
 function test_get_height()

@@ -14,8 +14,8 @@ function test_get_p_norm_gradient_by_user()
     userVec = ["1:-1" ,"2:-1" ,"3:-1" ,"4:1" ,"6:-1" ,"8:-1" ,"9:1" ,"11:-1"]
     ui = U[:, 1]
     res = get_p_norm_gradient_by_user(userVec, ui, U, V,2)
-    println(res)
-    println(typeof(res))
+    debug(res)
+    debug(typeof(res))
     assert(size(res)[1] != 0 )
 end
 
@@ -31,13 +31,13 @@ function test_get_p_norm_gradient_by_item()
     vh = V[:, itemId]
     userNum = u
     res = get_p_norm_gradient_by_item(X, U, V, itemId,2)
-    println(res)
-    println(vh)
-    println(typeof(res))
+    debug(res)
+    debug(vh)
+    debug(typeof(res))
 
     assert(size(res)[1] != 0 )
     assert(vh != res)
-    println("test passed")
+    debug("test passed")
 end
 
 

@@ -1,10 +1,10 @@
 include("../src/metric.jl")
 
-# println(actual)
-# println(typeof(actual))
-# println(round(actual,2))
-# println(expected_k[k])
-# println(typeof(expected_k[k]))
+# debug(actual)
+# debug(typeof(actual))
+# debug(round(actual,2))
+# debug(expected_k[k])
+# debug(typeof(expected_k[k]))
 
 # linear: normal
 function test_dcg_k()
@@ -14,7 +14,7 @@ function test_dcg_k()
   # actual = metric.dcg_k(y_predict ,scores,k, true)
   actual = dcg_k(y_predict ,k, true)
   @assert round(actual,2) == expected_k[k]
-  println("test passed")
+  debug("test passed")
 end
 
 # linear: all -1
@@ -25,7 +25,7 @@ function test_dcg_k2()
   # actual = metric.dcg_k(y_predict ,scores,k, true)
   actual = dcg_k(y_predict ,k, true)
   @assert actual == expected_k
-  println("test passed")
+  debug("test passed")
 end
 
 # exp: normal
@@ -35,7 +35,7 @@ function test_dcg_k_e1()
   k = 10
   actual = dcg_k(y_predict ,k=k)
   @assert round(actual,2) == round(expected_k[k],2)
-  println("test passed")
+  debug("test passed")
 end
 
 # exp: all -1
@@ -46,7 +46,7 @@ function test_dcg_k_e2()
   # actual = metric.dcg_k(y_predict ,scores,k, true)
   actual = dcg_k(y_predict ,k=k)
   @assert actual == expected_k
-  println("test passed")
+  debug("test passed")
 end
 
 # testDcg_k()
@@ -61,7 +61,7 @@ function test_avg_precision_k()
     actual = avg_precision_k(y_predict, relThreshold, k)
 
     @assert round(actual,2) == round(expected,2)
-    println("test passed")
+    debug("test passed")
 end
 
 function test_avg_precision_k2()
@@ -71,7 +71,7 @@ function test_avg_precision_k2()
   actual = avg_precision_k(y_predict, 0, 5)
   expected = 0.2
   @assert round(actual,2) == round(expected,2)
-  println("test passed")
+  debug("test passed")
 end
 
 
