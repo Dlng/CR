@@ -125,27 +125,27 @@ function get_neg_items(userVec, relThreshold)
     return res
 end
 
-function get_height_convex(userRowM, curNegItemVal, posItemIdxs)
-    curHeight = 0
-    for posItemIdx in posItemIdxs
-        curPosItemVal = userRow[posItemIdx]
-        delta = curPosItemVal - curNegItemVal
-        ri = 0
-        if delta > -100  # FIX
-            @assert (exp(-delta) != Inf) "exp(-delta) is Inf"
-            ri = log(1 + exp(-delta))
-        else
-            ri = -delta
-        end
-        @assert (!isnan(delta)) "delta is nan in get height"
-        #END TEST
-        curHeight += ri
-    end
-    @assert (curHeight != Inf) "curHeight is Inf"
-    @assert (isnan(curHeight) == false) "curHeight is NaN"
-    @assert (curHeight >= 0) "curHeight is $curHeight"
-    return curHeight
-end
+# function get_height_convex(userRowM, curNegItemVal, posItemIdxs)
+#     curHeight = 0
+#     for posItemIdx in posItemIdxs
+#         curPosItemVal = userRow[posItemIdx]
+#         delta = curPosItemVal - curNegItemVal
+#         ri = 0
+#         if delta > -100  # FIX
+#             @assert (exp(-delta) != Inf) "exp(-delta) is Inf"
+#             ri = log(1 + exp(-delta))
+#         else
+#             ri = -delta
+#         end
+#         @assert (!isnan(delta)) "delta is nan in get height"
+#         #END TEST
+#         curHeight += ri
+#     end
+#     @assert (curHeight != Inf) "curHeight is Inf"
+#     @assert (isnan(curHeight) == false) "curHeight is NaN"
+#     @assert (curHeight >= 0) "curHeight is $curHeight"
+#     return curHeight
+# end
 
 # @param following convention from paper, xj is V[:,j]
 function get_height(xj, ui, V, posItemIdxs)
@@ -211,26 +211,26 @@ function get_heights(userVec, ui, V)
 end
 
 
-function get_reverse_height_convex(userRowM, curPosItemVal, negItemIdxs)
-    curRHeight = 0
-    for negItemIdx in negItemIdxs
-        curNegItemVal = userRow[negItemIdx]
-        delta = curPosItemVal - curNegItemVal
-        ri = 0
-        if delta > -100  # FIX
-            @assert (exp(-delta) != Inf) "exp(-delta) is Inf"
-            ri = log(1 + exp(-delta))
-        else
-            ri = -delta
-        end
-        @assert (!isnan(delta)) "delta is nan in get height"
-        curRHeight += ri
-    end
-    @assert (curRHeight != Inf) "curRHeight is Inf"
-    @assert (isnan(curRHeight) == false) "curRHeight is NaN"
-    @assert (curRHeight >= 0) "curRHeight is $curRHeight"
-    return curRHeight
-end
+# function get_reverse_height_convex(userRowM, curPosItemVal, negItemIdxs)
+#     curRHeight = 0
+#     for negItemIdx in negItemIdxs
+#         curNegItemVal = userRow[negItemIdx]
+#         delta = curPosItemVal - curNegItemVal
+#         ri = 0
+#         if delta > -100  # FIX
+#             @assert (exp(-delta) != Inf) "exp(-delta) is Inf"
+#             ri = log(1 + exp(-delta))
+#         else
+#             ri = -delta
+#         end
+#         @assert (!isnan(delta)) "delta is nan in get height"
+#         curRHeight += ri
+#     end
+#     @assert (curRHeight != Inf) "curRHeight is Inf"
+#     @assert (isnan(curRHeight) == false) "curRHeight is NaN"
+#     @assert (curRHeight >= 0) "curRHeight is $curRHeight"
+#     return curRHeight
+# end
 
 function get_reverse_height(xk, ui, V, negItemIdxs)
     curRHeight = 0

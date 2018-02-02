@@ -200,7 +200,7 @@ function get_r_norm_gradient_by_item(X, U, V, itemId, relThreshold)
         if any(isnan.(finalRes))
             debug("PosUsers: ui is : $ui")
             debug("PosUsers: res is : $res")
-            debug("PosUsers: ni is : $ni")
+            debug("PosUsers: ni is : $ni ")
             debug("PosUsers: finalres is : $finalRes")
             debug(" ")
         end

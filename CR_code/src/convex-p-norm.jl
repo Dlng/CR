@@ -1,24 +1,35 @@
 include("util.jl")
 include("metric.jl")
-include("Logging")
+using Logging
 
 #TODO do param selection on regval 1e−4, 1e−3, 1e−2, 1e−1,1
 
-# TODO TEST
-function eval_obj(M, X, relThreshold, p)
+#TODO optimize
+function eval_obj(U, V, X, relThreshold, p)
     finalRes = 0
-    userNum = size(X)[1]
-    for userId in 1:userNum
-        userVec = X[userId, :]
+    for id in 1:size(X)[1]
+        userVec = X[id, :]
+        ui = deepcopy(U[:, id])
         userRes = 0
         posItemIdxs = get_pos_items(userVec,relThreshold)
         negItemIdxs = get_neg_items(userVec, relThreshold)
         ni = length(posItemIdxs) + length(negItemIdxs)
-        @assert (ni != 0) "RNORM:get_r_norm_gradient_by_user: ni is 0"
+        @assert (ni != 0) "PNORM:eval_obj: ni is 0"
+
         for negItemIdx in negItemIdxs
-            curHeight = get_height_convex(M, userId, negItemIdx, posItemIdxs)
+            vj = deepcopy(V[:, negItemIdx])
+            curHeight = get_height(vj, ui, V, posItemIdxs)
             userRes += curHeight^p
         end
+
+        # # TEMP exp_norm
+        # for posItemIdx in posItemIdxs
+        #     vk = deepcopy(V[:, posItemIdx])
+        #     curRHeight = get_reverse_height(vk, ui, V, negItemIdxs)
+        #     userRes += curRHeight^p
+        #     # END
+        # end
+        # # END TEMP
         finalRes += (1/ni) * userRes
 
     end
@@ -27,18 +38,19 @@ end
 
 
 # returns the gradient of loss by each M_im
-# TODO ??? the gradient for all pos / neg items are the same ?
-function get_convex_p_norm_gradient(userRowM, posItemIdxs, negItemIdxs, relThreshold,p)
+# the gradient for all pos / neg items are the same
+# use ui, V to replace userRowM
+function get_convex_p_norm_gradient(ui,V, posItemIdxs, negItemIdxs,p)
     finalGradient = 0
-    # userNum = size(X,1)
     ni = length(posItemIdxs) + length(negItemIdxs)
     @assert ni != 0
     for negItemIdx in negItemIdxs
-        curNegItemVal = userRowM[negItemIdx]
-        curHeight = get_height_convex(userRowM, curNegItemVal, posItemIdxs)
+        xj = V[:,negItemIdx]
+        curNegItemVal = dot(ui, xj)
+        curHeight = get_height(xj , ui, V,  posItemIdxs)
         tempSum = 0
         for posItemIdx in posItemIdxs
-            curPosItemVal = userRowM[posItemIdx]
+            curPosItemVal = dot(ui , V[:,posItemIdx])
             delta = curNegItemVal - curPosItemVal
             tempSum += sigma(delta) # move the sign to caller
         end
@@ -49,9 +61,9 @@ end
 
 
 """
-@PARAM: M: the replacement of U * V'; init with zeros
+@PARAM: U, V; for filling M, which is too large to be computed explicitly
 """
-function convex_p_norm_optimizer(X, M, Y, T, learningRate; p = 2, convThreshold=0.0001,
+function convex_p_norm_optimizer(X, U, V, Y, T, learningRate; p = 2, convThreshold=0.0001,
     regval=0.001, relThreshold = 4, rank=10, k = 5, metric=2)
     userNum = size(X,1)
     isConverge = false
@@ -97,7 +109,7 @@ function convex_p_norm_optimizer(X, M, Y, T, learningRate; p = 2, convThreshold=
             # end
 
             # since gradient of all entries of pos/neg set are the same
-            gradient =  get_convex_p_norm_gradient(M_row_i, posItemIdxs, negItemIdxs, relThreshold, p)
+            gradient =  get_convex_p_norm_gradient(M_row_i, posItemIdxs, negItemIdxs, p)
 
             # fill each pos entry in Mg
             for posItemIdx in posItemIdxs
