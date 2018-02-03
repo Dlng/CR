@@ -1,5 +1,5 @@
 include("util.jl")
-include("metric.jl")
+
 
 function eval_obj(U, V , X, relThreshold)
     finalRes = 0

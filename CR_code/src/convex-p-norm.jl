@@ -1,6 +1,5 @@
 include("util.jl")
 include("metric.jl")
-using Logging
 
 #TODO do param selection on regval 1e−4, 1e−3, 1e−2, 1e−1,1
 

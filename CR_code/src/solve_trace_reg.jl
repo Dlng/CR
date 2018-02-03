@@ -1,7 +1,5 @@
 using MATLAB
 
-include("train.jl")
-include("util.jl")
 # cannot calculate U *V explicitly; calculated the non-zero entries in X only
 function solve_trace_reg(X,Y,T,eval_obj,eval_gradient, evalf, opts)
 
@@ -48,7 +46,7 @@ function solve_trace_reg(X,Y,T,eval_obj,eval_gradient, evalf, opts)
     plotY_train = [] # eval metric on training set using updated U V
     plotY_eval = [] # eval metric on testing set using updated U V
 	for i in 1 : opts["max_iter"]
-
+	  debug("In GCG, in iter $i")
 	  t1 = Dates.value(now()); 
 	  k = size(U, 2);
 
@@ -58,10 +56,10 @@ function solve_trace_reg(X,Y,T,eval_obj,eval_gradient, evalf, opts)
 		    ub = fill(Inf, nel, 1);
 		    #% local search    
 
-		    UV, obj, _, _, msg = mxcall(:lbfgsb_mex, 5, vcat(U(:), V(:)), -ub, ub, obj_UV,[], [], opts["lbfgsb_in"]);
+		    UV, obj, _, _, msg = mxcall(:lbfgsb_mex, 5, vcat(U[:], V[:]), -ub, ub, obj_UV,[], [], opts["lbfgsb_in"]);
 		    # (UV, obj, ~, ~, msg) = mxcall(:lbfgsb_mex, 5, vcat(U(:), V(:)), -ub, ub, obj_UV);
-		    U = reshape(UV(1:k*m), [m, k]);
-		    V = reshape(UV(1+k*m:end), [k, n]);
+		    U = reshape(UV[1:k*m], [m, k]);
+		    V = reshape(UV[1+k*m:end], [k, n]);
 		    t2 = Dates.value(now()) - t2;
 		    local_search_time = local_search_time + t2;
 		end
@@ -73,8 +71,8 @@ function solve_trace_reg(X,Y,T,eval_obj,eval_gradient, evalf, opts)
 		  idx = (norm_U .> 1e-5) & (norm_V .> 1e-5);
 		  nidx = sum(idx);
 		if nidx < length(idx) # if there r some entries norm_U norm_V disagree
-		    U = U(:, idx);
-		    V = V(idx, :);
+		    U = U[:, idx];
+		    V = V[idx, :];
 		    norm_U = norm_U(idx);
 		    norm_V = norm_V(idx);
 		    norm_UV = norm_UV(idx);
@@ -171,8 +169,8 @@ function solve_trace_reg(X,Y,T,eval_obj,eval_gradient, evalf, opts)
 
 	  #% Line search objective
 	  function obj_ls(x)
-	  	tempU = hcat(sqrt(x(1))*U, sqrt(x(2))*u)
-	  	tempV = vcat(sqrt(x(1))*V; sqrt(x(2))*v')
+	  	tempU = hcat(sqrt(x[1])*U, sqrt(x[2])*u)
+	  	tempV = vcat(sqrt(x[1])*V; sqrt(x[2])*v')
 	  	f = eval_obj( tempU, tempV, Y,opts)
 	    G = eval_gradient( tempU, tempV, Y,opts)
 	    # f, G = objf( tempU, tempV, Y, opts["relThreshold"])

@@ -1,7 +1,6 @@
 using MATLAB
 
 include("util.jl")
-include("metric.jl")
 include("solve_trace_reg.jl")
 
 #TODO do param selection on regval 1e−4, 1e−3, 1e−2, 1e−1,1
@@ -142,7 +141,8 @@ function convex_r_norm_optimizer(X, M, Y, T, params; convThreshold=0.0001,
     opts["k"] =k
     opts["metric"] =metric
     # get solution from gcg
+    debug("convex_r_norm_optimizer, START gcg")
     U_opt, V_opt, plotY_eval, plotY_train, plotY_obj = solve_trace_reg(X,Y,T,eval_obj,eval_gradient,evalf, opts)
-
+    debug("convex_r_norm_optimizer, END gcg")
     return U_opt, V_opt , plotY_eval, plotY_train,plotY_obj
 end
