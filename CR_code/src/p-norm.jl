@@ -3,7 +3,9 @@ include("metric.jl")
 
 
 #TODO optimize
-function eval_obj(U, V, X, relThreshold, p)
+function eval_obj(U, V, X, params)
+    relThreshold = params["relThreshold"]
+    p = params["p"]
     finalRes = 0
     for id in 1:size(X)[1]
         userVec = X[id, :]
@@ -35,7 +37,9 @@ function eval_obj(U, V, X, relThreshold, p)
 end
 
 
-function get_p_norm_gradient_by_user(userVec,ui, V, p, relThreshold)
+function get_p_norm_gradient_by_user(userVec,ui, V,params)
+    p = params["p"]
+    relThreshold = params["relThreshold"]
     posItemIdxs = get_pos_items(userVec,relThreshold)
     negItemIdxs = get_neg_items(userVec, relThreshold)
     ni = length(posItemIdxs) + length(negItemIdxs)
@@ -219,7 +223,7 @@ function p_norm_optimizer(X, U, V, Y, T, learningRate; p = 2, convThreshold=0.00
     count = 1
 
     # plotting
-    plotX = []
+    
     plotY_obj = [] # eval obj on training set using updated U V
     plotY_train = [] # eval metric on training set using updated U V
     plotY_eval = [] # eval metric on testing set using updated U V

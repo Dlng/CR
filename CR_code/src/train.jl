@@ -1,12 +1,15 @@
 include("p-norm.jl")
 include("i-norm.jl")
 include("r-norm.jl")
+include("convex-p-norm.jl")
+include("convex-i-norm.jl")
+include("convex-r-norm.jl")
 include("metric.jl")
 # relevent thresholds
 ## >=4 : Movielens, Yahoo
 ## >=5: EachMovie
 
-# additonal filtering require: remove user with no pos rating for regular height, or with no neg rating for reverse height
+
 TRAIN_PATH = "/Users/Weilong/Desktop/Webscope_R1/train.lsvm"
 VALIDATE_PATH = "/Users/Weilong/Desktop/Webscope_R1/validate.lsvm"
 UPATH = "/Users/Weilong/Codes/cofirank/out_bak/U.lsvm"
@@ -57,12 +60,22 @@ function train(X, U, V, Y, T, plotDir, dataset, useCofi, curTime, ni;  algo=2, p
         U_opt, V_opt , plotY_eval, plotY_train,plotY_obj =
          p_norm_optimizer(X, U, V, Y, T, learningRate, p = p,convThreshold=convThreshold, regval=regval,
         relThreshold= relThreshold, iterNum=iterNum, k = k, metric=metric)
-    else
+    elseif algo == 3
         regval = 1/infGamma
         U_opt, V_opt, plotY_eval, plotY_train,plotY_obj =
         i_norm_optimizer(X, U, V, Y, T, learningRate=learningRate, regval=regval,
         infGamma=infGamma,innerLngRate = innerLngRate,innerConvThreshold=innerConvThreshold, convThreshold=convThreshold,
         relThreshold= relThreshold, iterNum=iterNum,epochs = epochs, k = k, metric=metric)
+    elseif algo == 4
+        U_opt, V_opt , plotY_eval, plotY_train,plotY_obj =
+         convex_r_norm_optimizer(X, U, V, Y, T, learningRate, p = p,convThreshold=convThreshold, regval=regval,
+        relThreshold= relThreshold, iterNum=iterNum, k = k, metric=metric)
+    elseif algo == 5
+        U_opt, V_opt , plotY_eval, plotY_train,plotY_obj =
+         convex_p_norm_optimizer(X, U, V, Y, T, learningRate, p = p,convThreshold=convThreshold, regval=regval,
+        relThreshold= relThreshold, iterNum=iterNum, k = k, metric=metric)
+    else
+        println("Invalid algo id")
     end
 
     toc() # for timing

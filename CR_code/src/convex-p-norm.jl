@@ -41,6 +41,8 @@ end
 # the gradient for all pos / neg items are the same
 # use ui, V to replace userRowM
 function get_convex_p_norm_gradient(ui,V, posItemIdxs, negItemIdxs,p)
+    @assert "p" in keys(params)
+    p = params["p"]
     finalGradient = 0
     ni = length(posItemIdxs) + length(negItemIdxs)
     @assert ni != 0
@@ -65,6 +67,7 @@ end
 """
 function convex_p_norm_optimizer(X, U, V, Y, T, learningRate; p = 2, convThreshold=0.0001,
     regval=0.001, relThreshold = 4, rank=10, k = 5, metric=2)
+    
     userNum = size(X,1)
     isConverge = false
     curEvalVali = 0

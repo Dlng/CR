@@ -294,7 +294,7 @@ function compareItems(item1, item2)
 end
 
 
-function plotFigure(plotDir, curTime, dataset,useCofi, algo, metric, ni, k, plotY_eval, plotY_train, plotY_obj)
+function plotFigure(plotLoss,plotDir, curTime, dataset,useCofi, algo, metric, ni, k, plotY_eval, plotY_train, plotY_obj)
     plotX = collect(1:length(plotY_obj))
     # title("minimizing loss")
     # ylabel("value of loss")
@@ -320,15 +320,20 @@ function plotFigure(plotDir, curTime, dataset,useCofi, algo, metric, ni, k, plot
     xlabel("iterations")
     # plot(plotX, plotY_obj, color="red", linewidth =2.0)
     grid(b=true)
-    plot(plotX, plotY_eval, color="blue", label="test MAP", linewidth =2.0)
-    plot(plotX, plotY_train, color = "green", label ="train MAP", linewidth =2.0)
+    if !plotLoss
+        plot(plotX, plotY_eval, color="blue", label="test MAP", linewidth =2.0)
+        plot(plotX, plotY_train, color = "green", label ="train MAP", linewidth =2.0)
+    else
+        plot(plotX, plotY_obj, color="red", label="training Objective", linewidth =2.0)
+    end
+    
     legend(loc=1)
 
     #make file name
     if useCofi == false
-        filename = plotDir *  algoName *"_rand" * "_" * dataset * "_given$(ni)_" *"$curTime.svg"
+        filename = plotDir *  algoName *"_rand" * "_$(dataset)"  * "_given$(ni)_" *"$curTime.svg"
     else
-        filename = plotDir *  algoName * "_" * dataset * "_given$(ni)_" *"$curTime.svg"
+        filename = plotDir *  algoName * "_$(dataset)" * "_given$(ni)_" *"$curTime.svg"
     end
 
     savefig(filename)
