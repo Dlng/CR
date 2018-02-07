@@ -68,18 +68,18 @@ function train(X, U, V, Y, T, plotDir, dataset, useCofi, curTime, ni;  algo=2, p
         relThreshold= relThreshold, iterNum=iterNum,epochs = epochs, k = k, metric=metric)
     elseif algo == 4
         U_opt, V_opt , plotY_eval, plotY_train,plotY_obj =
-         convex_r_norm_optimizer(X, U, V, Y, T, learningRate, p = p,convThreshold=convThreshold, regval=regval,
+         convex_r_norm_optimizer(X, Y, T, learningRate,convThreshold=convThreshold, regval=regval,
         relThreshold= relThreshold, iterNum=iterNum, k = k, metric=metric)
     elseif algo == 5
         U_opt, V_opt , plotY_eval, plotY_train,plotY_obj =
-         convex_p_norm_optimizer(X, U, V, Y, T, learningRate, p = p,convThreshold=convThreshold, regval=regval,
+         convex_p_norm_optimizer(X, Y, T, learningRate=learningRate, p = p,convThreshold=convThreshold, regval=regval,
         relThreshold= relThreshold, iterNum=iterNum, k = k, metric=metric)
     else
         println("Invalid algo id")
     end
 
     toc() # for timing
-    plotFigure(plotDir, curTime, dataset, useCofi,algo, metric, ni, k, plotY_eval, plotY_train, plotY_obj)
+    plotFigure(false,plotDir, curTime, dataset, useCofi,algo, metric, ni, k, plotY_eval, plotY_train, plotY_obj)
 
     return U_opt, V_opt
 end

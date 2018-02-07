@@ -108,7 +108,7 @@ function get_convex_r_norm_gradient(U,V,X,params)
 end
 
 
-function convex_r_norm_optimizer(X, M, Y, T, params; convThreshold=0.0001,
+function convex_r_norm_optimizer(X,  Y, T;learningRate=0.001, convThreshold=0.0001,
     regval=0.001, relThreshold = 4, max_iter=10, k = 5, metric=2)
     
     # make args

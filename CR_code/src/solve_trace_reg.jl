@@ -84,10 +84,10 @@ function solve_trace_reg(X,Y,T,eval_obj,eval_gradient, evalf, opts)
 		    end
   		end
   		if opts["use_local"] || i > 1
-  			msg = msg2str(msg, 'lbfgsb')
-    		println('iter=$i, loss = $loss, obj=$obj, curEvalVali=$curEvalVali, 
-    			curEvalTest=$curEvalTest, curEvalTrain=$curEvalTrain, k=$k, time=$total_time, ls_time=local_search_time,
-    			msg=$msg\n')
+  			# msg = msg2str(msg, 'lbfgsb')
+    	# 	println('iter=$i, loss = $loss, obj=$obj, curEvalVali=$curEvalVali, 
+    	# 		curEvalTest=$curEvalTest, curEvalTrain=$curEvalTrain, k=$k, time=$total_time, ls_time=local_search_time,
+    	# 		msg=$msg\n')
   		end
 
 		if nidx > 0
@@ -97,13 +97,13 @@ function solve_trace_reg(X,Y,T,eval_obj,eval_gradient, evalf, opts)
   		end
 
   		if i > 1 && abs(pre_obj-obj) / minimum(abs([pre_obj, obj])) < opts["rtol"]
-		    msg = 'Stop with small relative change';
+		    msg = "Stop with small relative change";
 		    break;
 		elseif total_time > opts["max_time"]
-		    msg = 'Stop by max_time';
+		    msg = "Stop by max_time";
 		    break;
 		elseif i == opts["max_iter"]
-		    msg = 'Stop with max iteration';
+		    msg = "Stop with max iteration";
 		    break;
 		else
 		    pre_obj = obj;
@@ -149,9 +149,9 @@ function solve_trace_reg(X,Y,T,eval_obj,eval_gradient, evalf, opts)
 
 	iter = i;
 
-	if opts["verbose"]
-	  println('$msg\n');
-	end
+	# if opts["verbose"]
+	  # println('$msg\n');
+	# end
 
 		#% local search objective
 	  function obj_UV(M)
