@@ -67,13 +67,15 @@ function train(X, U, V, Y, T, plotDir, dataset, useCofi, curTime, ni;  algo=2, p
         infGamma=infGamma,innerLngRate = innerLngRate,innerConvThreshold=innerConvThreshold, convThreshold=convThreshold,
         relThreshold= relThreshold, iterNum=iterNum,epochs = epochs, k = k, metric=metric)
     elseif algo == 4
+        m = size(U,2)
+        n = size(V,2)
         U_opt, V_opt , plotY_eval, plotY_train,plotY_obj =
-         convex_r_norm_optimizer(X, Y, T, learningRate,convThreshold=convThreshold, regval=regval,
-        relThreshold= relThreshold, iterNum=iterNum, k = k, metric=metric)
+         convex_r_norm_optimizer(X, Y, T,m,n, learningRate=learningRate,convThreshold=convThreshold, regval=regval,
+        relThreshold= relThreshold, max_iter=iterNum, k = k, metric=metric)
     elseif algo == 5
         U_opt, V_opt , plotY_eval, plotY_train,plotY_obj =
          convex_p_norm_optimizer(X, Y, T, learningRate=learningRate, p = p,convThreshold=convThreshold, regval=regval,
-        relThreshold= relThreshold, iterNum=iterNum, k = k, metric=metric)
+        relThreshold= relThreshold, max_iter=iterNum, k = k, metric=metric)
     else
         println("Invalid algo id")
     end

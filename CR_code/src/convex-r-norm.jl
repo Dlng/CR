@@ -64,7 +64,7 @@ function get_convex_r_norm_gradient(U,V,X,params)
 """
 - since M should not be computed explicitly, for each gradient entry, coord should be recorded
 - How to reflect the changes in U, V? or what does solve_trace_reg expect?
-""" 
+"""
     relThreshold = params["relThreshold"]
     m = size(U,2)
     n = size(V,2)
@@ -108,12 +108,10 @@ function get_convex_r_norm_gradient(U,V,X,params)
 end
 
 
-function convex_r_norm_optimizer(X,  Y, T;learningRate=0.001, convThreshold=0.0001,
+function convex_r_norm_optimizer(X, Y, T,m,n;learningRate=0.001, convThreshold=0.0001,
     regval=0.001, relThreshold = 4, max_iter=10, k = 5, metric=2)
-    
+
     # make args
-    m = size(U,2)
-    n = size(V,2)
     dims = [m,n]
     lambda = 10
 
@@ -132,17 +130,18 @@ function convex_r_norm_optimizer(X,  Y, T;learningRate=0.001, convThreshold=0.00
 
     opts["lbfgsb_in"] = lbfgsb_in
     opts["init_rank"] = 2
-    opts["max_iter"] = max_iter # the number of rank, 10 is the val in CR with push    
+    opts["max_iter"] = max_iter # the number of rank, 10 is the val in CR with push
     opts["use_local"] = true;  #% whether to use local optimization at each iteration
     opts["verbose"] = true
     opts["lambda"] =lambda
+    opts["dims"] = dims
     # params for eval_obj & eval_gradient
     opts["relThreshold"] = relThreshold
     opts["k"] =k
     opts["metric"] =metric
     # get solution from gcg
     debug("convex_r_norm_optimizer, START gcg")
-    U_opt, V_opt, plotY_eval, plotY_train, plotY_obj = solve_trace_reg(X,Y,T,eval_obj,eval_gradient,evalf, opts)
+    U_opt, V_opt, plotY_eval, plotY_train, plotY_obj = solve_trace_reg(X,Y,T,eval_obj,get_convex_r_norm_gradient,evaluate, opts)
     debug("convex_r_norm_optimizer, END gcg")
     return U_opt, V_opt , plotY_eval, plotY_train,plotY_obj
 end
