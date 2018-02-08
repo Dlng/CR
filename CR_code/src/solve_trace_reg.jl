@@ -28,6 +28,7 @@ function solve_trace_reg(X,Y,T,eval_obj,eval_gradient, evalf, opts)
   n = dims[2];
   k = opts["init_rank"]; # % Initialize U and V with rank k= 2
 
+  pre_obj = 0
   sk = 0
   u = []
   v = []
@@ -92,17 +93,23 @@ function solve_trace_reg(X,Y,T,eval_obj,eval_gradient, evalf, opts)
 		    nel = k*(m+n);
 		    ub = fill(Inf, nel, 1);
 		    #% local search
-		    #UV, obj, _, _, msg = mxcall(:lbfgsb_mex, 5, vcat(U[:], V[:]), -ub, ub, obj_UV,[], [], opts["lbfgsb_in"]);
+		    # UV, obj, _, _, msg = mxcall(:lbfgsb_mex, 5, vcat(U[:], V[:]), -ub, ub, obj_UV,[], [], opts["lbfgsb_in"]);
+        UV= mxcall(:lbfgsb_mex, 1, vcat(U[:], V[:]), -ub, ub, obj_UV,[], [], opts["lbfgsb_in"]);
 		    U = reshape(UV[1:k*m], [m, k]);
 		    V = reshape(UV[1+k*m:end], [k, n]);
+        # calculate current obj
+        param = Dict()
+        param["relThreshold"] = opts["relThreshold"]
+        obj = eval_obj(U,V,X,param)
+
 		    t2 = Dates.value(now()) - t2;
 		    local_search_time = local_search_time + t2;
 		end
 
 		# this norm is the sqrt of sum among dim of rank, ie V(r,k) gives res of dim (1,k)
-		  norm_U = sqrt(sum(U.*U, 1))';
-		  norm_V = sqrt(sum(V.*V, 2));
-		  norm_UV = sqrt(norm_U .* norm_V);
+		  norm_U = sqrt(sum(U.*U, 1))'; #size = 1,k
+		  norm_V = sqrt(sum(V.*V, 2)); #size = 1,k
+		  norm_UV = sqrt(norm_U .* norm_V); #size = 1,k
 		  idx = (norm_U .> 1e-5) & (norm_V .> 1e-5);
 		  nidx = sum(idx);
 		if nidx < length(idx) # if there r some entries norm_U norm_V disagree
@@ -112,18 +119,18 @@ function solve_trace_reg(X,Y,T,eval_obj,eval_gradient, evalf, opts)
 		    norm_V = norm_V(idx);
 		    norm_UV = norm_UV(idx);
 		end
-  		if opts["use_local"]
-		    loss = obj - 0.5*lambda*(norm_U'*norm_U + norm_V'*norm_V);
-		    if isempty(loss)
-		      loss = obj;
-		    end
-  		end
-  		if opts["use_local"] || i > 1
+  		# if opts["use_local"]
+		  #   loss = obj - 0.5*lambda*(norm_U'*norm_U + norm_V'*norm_V);
+		  #   if isempty(loss)
+		  #     loss = obj;
+		  #   end
+  		# end
+  		# if opts["use_local"] || i > 1
   			# msg = msg2str(msg, 'lbfgsb')
     	# 	println('iter=$i, loss = $loss, obj=$obj, curEvalVali=$curEvalVali,
     	# 		curEvalTest=$curEvalTest, curEvalTrain=$curEvalTrain, k=$k, time=$total_time, ls_time=local_search_time,
     	# 		msg=$msg\n')
-  		end
+  		# end
 
 		if nidx > 0
     		sk = 0.5*(norm_U'*norm_U + norm_V'*norm_V); #% Xk = U*V;
@@ -146,19 +153,19 @@ function solve_trace_reg(X,Y,T,eval_obj,eval_gradient, evalf, opts)
 
 		# rewrite pass in the vals match nonzero entries of X()
 		G = eval_gradient(U,V,Y,opts) #    #% G is a sparse matrix
-		#u, _, v = mxcall(:svd,3,G,0);  #% this is polar
+		u, _, v = mxcall(:svd,3,G,0);  #% this is polar
 		v = -v;
 
 		#% line search
-  		#weights, obj, _, _, msg = mxcall(:lbfgsb_mex, 5,vcat(1, 0.5), vcat(0, 0), vcat(Inf, Inf),obj_ls, [], [], opts["lbfgsb_in"]);
-    	# weights, obj, _, _, msg = mxcall(:lbfgsb_mex,5, vcat(1, 0.5), vcat(0, 0), vcat(Inf, Inf),obj_ls);
-  		loss = obj - lambda*(sk*weights[1] + weights[2]);
-		  weights = sqrt(weights);
+  		# weights, obj, _, _, msg = mxcall(:lbfgsb_mex, 5,vcat(1, 0.5), vcat(0, 0), vcat(Inf, Inf),obj_ls, [], [], opts["lbfgsb_in"]);
+      weights = mxcall(:lbfgsb_mex, 1,vcat(1, 0.5), vcat(0, 0), vcat(Inf, Inf),obj_ls, [], [], opts["lbfgsb_in"]);
+  		# loss = obj - lambda*(sk*weights[1] + weights[2]);
+		  weights = sqrt.(weights);
 		  if nidx > 0
 		  	preTempU = weights[1]*(norm_UV./norm_U)'
 		  	preTempV = weights[1]*norm_UV./norm_V
-		  	#tempU = mxcall(:bsxfun, 1,mat"""@times""", U, preTempU)
-			  #tempV = mxcall(:bsxfun, 1,mat"""@times""", V, preTempV)
+		  	tempU = mxcall(:bsxfun, 1,mat"""@times""", U, preTempU)
+			  tempV = mxcall(:bsxfun, 1,mat"""@times""", V, preTempV)
 		  	U = hcat(tempU, weights[2] * u)
 		  	V = vcat(tempV, weights[2] * v')
 		  else
@@ -187,8 +194,10 @@ function solve_trace_reg(X,Y,T,eval_obj,eval_gradient, evalf, opts)
 	# if opts["verbose"]
 	  # println('$msg\n');
 	# end
-
-
+  debug("CONVEX-RNORM:final plotY_eval :$plotY_eval")
+  debug("CONVEX-RNORM:final plotY_obj :$plotY_obj")
+  debug("CONVEX-RNORM:final plotY_train :$plotY_train")
+  debug("CONVEX-RNORM FINISH")
 
 	return U, V, plotY_obj,plotY_train,plotY_eval
 end
