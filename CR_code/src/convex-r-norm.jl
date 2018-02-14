@@ -8,6 +8,7 @@ include("solve_trace_reg.jl")
 
 function eval_obj(U, V , X, params)
     relThreshold = params["relThreshold"]
+    regval = params["regval"]
     finalRes = 0
     userNum = size(X)[1]
     for id in 1:userNum
@@ -31,8 +32,9 @@ function eval_obj(U, V , X, params)
         # end
         # # END
         finalRes += (1/ni) * userRes
-
     end
+    regTerm = trace(U' * V)
+    finalRes += regTerm
     return finalRes
 end
 
@@ -137,6 +139,7 @@ function convex_r_norm_optimizer(X, Y, T,m,n;learningRate=0.001, convThreshold=0
     opts["dims"] = dims
     # params for eval_obj & eval_gradient
     opts["relThreshold"] = relThreshold
+    opts["regval"] = regval
     opts["k"] =k
     opts["metric"] =metric
     # get solution from gcg

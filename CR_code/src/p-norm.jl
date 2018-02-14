@@ -3,7 +3,7 @@ include("metric.jl")
 
 
 #TODO optimize
-function eval_obj(U, V, X, relThreshold, p)
+function eval_obj(U, V, X, relThreshold, p, regval)
     # relThreshold = params["relThreshold"]
     # p = params["p"]
     finalRes = 0
@@ -33,6 +33,9 @@ function eval_obj(U, V, X, relThreshold, p)
         finalRes += (1/ni) * userRes
 
     end
+    # add reg terms
+    regTerm = regval/2 * (dot(U,U) ^2 + dot(V,V) ^2)
+    finalRes += regTerm
     return finalRes
 end
 
@@ -223,7 +226,7 @@ function p_norm_optimizer(X, U, V, Y, T, learningRate; p = 2, convThreshold=0.00
     count = 1
 
     # plotting
-    
+
     plotY_obj = [] # eval obj on training set using updated U V
     plotY_train = [] # eval metric on training set using updated U V
     plotY_eval = [] # eval metric on testing set using updated U V
@@ -266,7 +269,7 @@ function p_norm_optimizer(X, U, V, Y, T, learningRate; p = 2, convThreshold=0.00
             # debug(gradient) ## gradient is NaN
             # debug(" ")
             # V[:, h] = (vh - learningRate *(gradient + ragVal))'
-            V[:, h] = vh - learningRate *(gradient + ragVal)
+            V[:, h] = vh - learningRate *(gradient + ragval)
 
             @assert (vh != V[:,h]) "V[:,h] not updated! being $(V[:,h])"
             @assert (any(isnan.(V[:,h])) == false) "vh contains NaN being $(V[:,h])"
@@ -281,7 +284,7 @@ function p_norm_optimizer(X, U, V, Y, T, learningRate; p = 2, convThreshold=0.00
         curEvalTest = evaluate(U, V, T, k = k, relThreshold = relThreshold, metric=metric)
         curEvalTrain = evaluate(U, V, X, k = k, relThreshold = relThreshold,metric=metric)
         # Test evaluate the loss instead
-        curVal_obj = eval_obj(U, V, X, relThreshold, p)
+        curVal_obj = eval_obj(U, V, X, relThreshold, p,regVal)
 
         push!(plotY_eval, curEvalTest)
         push!(plotY_train, curEvalTrain)

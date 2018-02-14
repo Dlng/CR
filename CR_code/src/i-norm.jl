@@ -102,7 +102,7 @@ function eval_obj_by_user(ui, id , V, X,relThreshold)
     return userRes
 end
 
-function eval_obj(U, V, X, relThreshold)
+function eval_obj(U, V, X, relThreshold, regval)
     finalRes = 0
     for id in 1:size(X)[1]
         ui = U[:, id]
@@ -114,6 +114,9 @@ function eval_obj(U, V, X, relThreshold)
         userRes = eval_obj_by_user(ui,id, V, X, relThreshold)
         finalRes += 1/ni * userRes
     end
+    # add reg terms
+    regTerm = regval/2 * (dot(U,U) ^2 + dot(V,V) ^2)
+    finalRes += regTerm
     return finalRes
 end
 
@@ -294,7 +297,7 @@ convThreshold=0.0001, relThreshold= 4, iterNum=200, epochs = 200, k = 5, metric=
         curEvalTest = evaluate(U, V, T, k = k, relThreshold = relThreshold, metric=metric)
         curEvalTrain = evaluate(U, V, X, k = k, relThreshold = relThreshold,metric=metric)
         # Test evaluate the loss instead
-        curVal_obj = eval_obj(U, V, X, relThreshold)
+        curVal_obj = eval_obj(U, V, X, relThreshold,regval)
 
         push!(plotY_eval, curEvalTest)
         push!(plotY_train, curEvalTrain)

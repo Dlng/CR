@@ -1,7 +1,7 @@
 include("util.jl")
 
 
-function eval_obj(U, V , X, relThreshold)
+function eval_obj(U, V , X, relThreshold,regval)
     finalRes = 0
     userNum = size(X)[1]
     for id in 1:userNum
@@ -25,8 +25,10 @@ function eval_obj(U, V , X, relThreshold)
         # end
         # # END
         finalRes += (1/ni) * userRes
-
     end
+    # add reg terms
+    regTerm = regval/2 * (dot(U,U) ^2 + dot(V,V) ^2)
+    finalRes += regTerm
     return finalRes
 end
 
@@ -288,7 +290,7 @@ function r_norm_optimizer(X, U, V, Y, T; learningRate=0.0001, convThreshold=0.00
         curEvalTest = evaluate(U, V, T, k = k, relThreshold = relThreshold, metric=metric)
         curEvalTrain = evaluate(U, V, X, k = k, relThreshold = relThreshold,metric=metric)
         # Test evaluate the loss instead
-        curVal_obj = eval_obj(U, V, X, relThreshold)
+        curVal_obj = eval_obj(U, V, X, relThreshold,regval)
 
         push!(plotY_eval, curEvalTest)
         push!(plotY_train, curEvalTrain)

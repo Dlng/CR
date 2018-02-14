@@ -30,8 +30,9 @@ function eval_obj(U, V, X, relThreshold, p)
         # end
         # # END TEMP
         finalRes += (1/ni) * userRes
-
     end
+    regTerm = trace(U' * V)
+    finalRes += regTerm
     return finalRes
 end
 
@@ -66,7 +67,7 @@ end
 """
 function convex_p_norm_optimizer(X, U, V, Y, T, learningRate; p = 2, convThreshold=0.0001,
     regval=0.001, relThreshold = 4, rank=10, k = 5, metric=2)
-    
+
     userNum = size(X,1)
     isConverge = false
     curEvalVali = 0
